@@ -1,0 +1,51 @@
+@Library('csm-shared-library@main') _
+
+// Find a .tar.gz here: https://www.python.org/ftp/python/
+def pyVersion = '3.8.13'
+def (pyMajor, pyMinor, pyBugfix) = pyVersion.tokenize('.')
+def isStable = env.TAG_NAME != null || env.BRANCH_NAME == 'main' ? true : false
+pipeline {
+    agent {
+        label "metal-gcp-builder"
+    }
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr: "1"))
+        timestamps()
+    }
+
+    environment {
+        DESCRIPTION = "CRAY System Management SLE Server Python Build Image"
+        DOCKER_ARGS = getDockerBuildArgs(name: env.NAME, description: env.DESCRIPTION)
+        DOCKER_BUILDKIT = 1
+        NAME = "csm-docker-sle-python"
+        PY_FULL_VERSION = "${pyVersion}"
+        PY_VERSION = "${pyMajor}.${pyMinor}"
+        VERSION = "${GIT_COMMIT[0..6]}"
+    }
+
+    stages {
+
+        stage('Build') {
+            steps {
+                withCredentials([
+                    string(credentialsId: 'sles15-registration-code', variable: 'SLES_REGISTRATION_CODE')
+                ]) {
+                    sh "make image"
+                }
+            }
+        }
+
+        stage('Publish') {
+            steps {
+                script {
+                    publishCsmDockerImage(image: env.NAME, tag: env.VERSION, isStable: isStable)
+                    publishCsmDockerImage(image: env.NAME, tag: env.PY_FULL_VERSION, isStable: isStable)
+                    publishCsmDockerImage(image: env.NAME, tag: env.PY_VERSION, isStable: isStable)
+                    publishCsmDockerImage(image: env.NAME, tag: "latest", isStable: isStable)
+                }
+            }
+        }
+
+    }
+}
