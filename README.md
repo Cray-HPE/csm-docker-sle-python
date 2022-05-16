@@ -2,6 +2,15 @@
 
 A SLE Server Python Docker image used for RPM builds.
 
+## Available Images
+
+See a list of available Python Images with `git tag`, but in general there are:
+
+- `latest`, `3.10`, and `3.10.4`
+- `3.8` and `3.8.13`
+
+Tags can also be seen directly at [https://artifactory.algol60.net/artifactory/csm-docker/stable/csm-docker-sle-python](https://artifactory.algol60.net/artifactory/csm-docker/stable/csm-docker-sle-python).
+
 ## Building
 
 The provided `Makefile` adds Jenkins Pipeline variables to the `docker build` command. The commands below are for use outside of the CSM Jenkins Pipeline.
