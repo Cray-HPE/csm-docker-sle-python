@@ -25,6 +25,7 @@ RUN --mount=type=secret,id=SLES_REGISTRATION_CODE SUSEConnect -r $(cat /run/secr
 CMD ["/bin/bash"]
 FROM base AS py-base
 
+ARG PY_FULL_VERSION=''
 ARG PY_VERSION=''
 
 RUN zypper refresh \
@@ -32,12 +33,20 @@ RUN zypper refresh \
     libffi-devel
 
 RUN mkdir .python && cd .python \
-    && curl -O https://www.python.org/ftp/python/$PY_VERSION/Python-$PY_VERSION.tar.xz \
-    && tar -xvf ./Python-$PY_VERSION.tar.xz && rm Python-$PY_VERSION.tar.xz
+    && curl -O https://www.python.org/ftp/python/$PY_FULL_VERSION/Python-$PY_FULL_VERSION.tar.xz \
+    && tar -xvf ./Python-$PY_FULL_VERSION.tar.xz && rm Python-$PY_FULL_VERSION.tar.xz
 
-RUN cd .python/Python-$PY_VERSION \
+RUN cd .python/Python-$PY_FULL_VERSION \
     && ./configure --enable-optimizations --enable-shared LDFLAGS='-Wl,-rpath /usr/local/lib' \
     && make altinstall
+
+RUN ln -snf ../local/bin/python$PY_VERSION /usr/bin/python3 \
+    && ln -snf ../local/bin/pip$PY_VERSION /usr/bin/pip3
+
+RUN python3 -m pip install -U pip \
+    && python3 -m pip install -U setuptools \
+    && python3 -m pip install -U virtualenv \
+    && python3 -m pip install -U wheel
 
 WORKDIR /build
 
