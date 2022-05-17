@@ -3,8 +3,7 @@
 // Find a .tar.gz here: https://www.python.org/ftp/python/
 def pyVersion = '3.8.13'
 def (pyMajor, pyMinor, pyBugfix) = pyVersion.tokenize('.')
-def promotionToken = ~"(main|release\\/.*)"
-def isStable = env.TAG_NAME != null || env.BRANCH_NAME ==~ promotionToken ? true : false
+def isStable = env.TAG_NAME != null || env.BRANCH_NAME == 'main' ? true : false
 pipeline {
     agent {
         label "metal-gcp-builder"
