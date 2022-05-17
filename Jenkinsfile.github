@@ -2,7 +2,10 @@
 
 // Find a .tar.gz here: https://www.python.org/ftp/python/
 def pyVersion = '3.8.13'
+
+// Tokenize to enable major.minor image tags (e.g. make a 3.10 tag when building 3.10.4).
 def (pyMajor, pyMinor, pyBugfix) = pyVersion.tokenize('.')
+
 def isStable = env.TAG_NAME != null || env.BRANCH_NAME == 'main' ? true : false
 pipeline {
     agent {
