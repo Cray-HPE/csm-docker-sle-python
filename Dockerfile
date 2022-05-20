@@ -46,9 +46,9 @@ RUN ./configure --enable-optimizations --enable-shared LDFLAGS='-Wl,-rpath /usr/
 RUN ln -snf "../local/bin/python$PY_VERSION" /usr/bin/python3 \
     && ln -snf "../local/bin/pip$PY_VERSION" /usr/bin/pip3
 
-RUN python3 -m pip install --no-cache-dir -U pip \
-    && python3 -m pip install --no-cache-dir -U setuptools \
-    && python3 -m pip install --no-cache-dir -U virtualenv \
-    && python3 -m pip install --no-cache-dir -U wheel
+RUN python3 -m pip install -U 'pip<23.0' \
+    && python3 -m pip install -U 'setuptools<62.4.0' \
+    && python3 -m pip install -U 'virtualenv<20.15.0' \
+    && python3 -m pip install -U 'wheel<0.38.0'
 
 WORKDIR /build
