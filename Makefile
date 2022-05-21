@@ -21,7 +21,7 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 NAME ?= ${NAME}
 DOCKER_BUILDKIT ?= ${DOCKER_BUILDKIT}
-PY_FULL_VERSION := $(shell awk -v replace="'" '/pyVersion/{gsub(replace,"", $$NF); print $$NF; exit}' Jenkinsfile.github)
+PY_FULL_VERSION := $(shell awk -v replace="'" '/pythonVersion/{gsub(replace,"", $$NF); print $$NF; exit}' Jenkinsfile.github)
 PY_VERSION := $(shell echo ${PY_FULL_VERSION} | awk -F '.' '{print $$1"."$$2}')
 VERSION ?= ${VERSION}
 
