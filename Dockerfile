@@ -31,24 +31,14 @@ ARG PY_VERSION=''
 RUN zypper refresh \
     && zypper --non-interactive install --no-recommends --force-resolution \
     libffi-devel \
+    python3-devel \
+    python3-pip \
+    python3-setuptools \
+    python3-virtualenv \
+    python3-wheel \
     && zypper clean -a \
     && SUSEConnect --cleanup
 
-WORKDIR /root/.python
-RUN curl -O "https://www.python.org/ftp/python/$PY_FULL_VERSION/Python-$PY_FULL_VERSION.tar.xz" \
-    && tar -xvf "./Python-$PY_FULL_VERSION.tar.xz" \
-    && rm "Python-$PY_FULL_VERSION.tar.xz"
-
-WORKDIR "/root/.python/Python-$PY_FULL_VERSION"
-RUN ./configure --enable-optimizations --enable-shared LDFLAGS='-Wl,-rpath /usr/local/lib' \
-    && make altinstall
-
-RUN ln -snf "../local/bin/python$PY_VERSION" /usr/bin/python3 \
-    && ln -snf "../local/bin/pip$PY_VERSION" /usr/bin/pip3
-
-RUN python3 -m pip install --no-cache-dir -U pip \
-    && python3 -m pip install --no-cache-dir -U setuptools \
-    && python3 -m pip install --no-cache-dir -U virtualenv \
-    && python3 -m pip install --no-cache-dir -U wheel
+RUN ln -snf /usr/bin/python3 /usr/bin/python
 
 WORKDIR /build
