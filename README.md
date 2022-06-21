@@ -20,7 +20,7 @@ export DOCKER_BUILDKIT=1
 export SLES_REGISTRATION_CODE=<registration_code>
 
 # Build Python 3.8.13
-docker build --secret id=SLES_REGISTRATION_CODE --arg PY_FULL_VERSION=3.8.13 .
+docker build --secret id=SLES_REGISTRATION_CODE --build-arg PY_FULL_VERSION=3.10.4 .
 
 ```
 
