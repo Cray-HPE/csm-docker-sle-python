@@ -19,9 +19,8 @@
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
-FROM artifactory.algol60.net/csm-docker/stable/csm-docker-sle:15.3 AS base
+FROM artifactory.algol60.net/csm-docker/stable/csm-docker-sle:15.2 AS base
 
-RUN --mount=type=secret,id=SLES_REGISTRATION_CODE SUSEConnect -r "$(cat /run/secrets/SLES_REGISTRATION_CODE)"
 CMD ["/bin/bash"]
 FROM base AS py-base
 
@@ -37,7 +36,6 @@ RUN zypper refresh \
     python3-virtualenv \
     python3-wheel \
     && zypper clean -a \
-    && SUSEConnect --cleanup
 
 RUN ln -snf /usr/bin/python3 /usr/bin/python
 

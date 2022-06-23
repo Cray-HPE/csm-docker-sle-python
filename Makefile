@@ -21,7 +21,8 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 NAME ?= ${NAME}
 DOCKER_BUILDKIT ?= ${DOCKER_BUILDKIT}
-PY_FULL_VERSION := $(shell awk -v replace="'" '/pyVersion/{gsub(replace,"", $$NF); print $$NF; exit}' Jenkinsfile.github)
+LEAP_VERSION := $(shell awk -v replace="'" '/leapVersion/{gsub(replace,"", $$NF); print $$NF; exit}' Jenkinsfile.github)
+PY_FULL_VERSION := $(shell awk -v replace="'" '/pythonVersion/{gsub(replace,"", $$NF); print $$NF; exit}' Jenkinsfile.github)
 PY_VERSION := $(shell echo ${PY_FULL_VERSION} | awk -F '.' '{print $$1"."$$2}')
 VERSION ?= ${VERSION}
 
@@ -29,6 +30,6 @@ all: image
 
 image:
 	docker build --secret id=SLES_REGISTRATION_CODE --pull ${DOCKER_ARGS} --build-arg PY_VERSION=${PY_VERSION} --build-arg PY_FULL_VERSION=${PY_FULL_VERSION} --tag '${NAME}:${VERSION}' .
-	docker tag '${NAME}:${VERSION}' ${NAME}:${PY_FULL_VERSION}
-	docker tag '${NAME}:${VERSION}' ${NAME}:${PY_VERSION}
+	docker tag '${NAME}:${VERSION}' ${NAME}:${PY_FULL_VERSION}_leap${LEAP_VERSION}
+	docker tag '${NAME}:${VERSION}' ${NAME}:${PY_VERSION}_leap${LEAP_VERSION}
 	docker tag '${NAME}:${VERSION}' ${NAME}:latest
