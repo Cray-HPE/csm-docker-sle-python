@@ -47,10 +47,8 @@ pipeline {
                     publishCsmDockerImage(image: env.NAME, tag: env.VERSION, isStable: isStable)
                     publishCsmDockerImage(image: env.NAME, tag: env.PY_FULL_VERSION, isStable: isStable)
                     publishCsmDockerImage(image: env.NAME, tag: env.PY_VERSION, isStable: isStable)
-                    publishCsmDockerImage(image: env.NAME, tag: "latest", isStable: isStable)
                 }
             }
         }
-
     }
 }
