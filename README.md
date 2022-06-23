@@ -6,8 +6,10 @@ A SLE Server Python Docker image used for RPM builds.
 
 See a list of available Python Images with `git tag`, but in general there are:
 
-- `latest`, `3.10`, and `3.10.4`
+- `3.10`, and `3.10.4`
 - `3.8` and `3.8.13`
+- `3.6` and `3.6.15`
+- `3.6_leap15.2` and `3.6.15_leap15.2`
 
 Tags can also be seen directly at [https://artifactory.algol60.net/artifactory/csm-docker/stable/csm-docker-sle-python](https://artifactory.algol60.net/artifactory/csm-docker/stable/csm-docker-sle-python).
 
@@ -27,9 +29,6 @@ docker build --secret id=SLES_REGISTRATION_CODE --build-arg PY_FULL_VERSION=3.10
 ## Running
 
 ```bash
-# Latest
-docker run -it artifactory.algol60.net/csm-docker/stable/csm-docker-sle-python:latest
-
 # Python Major Minor Version
 docker run -it artifactory.algol60.net/csm-docker/stable/csm-docker-sle-python:3.8
 
