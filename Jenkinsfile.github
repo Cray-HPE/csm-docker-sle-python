@@ -3,6 +3,9 @@
 // Find a .tar.gz here: https://www.python.org/ftp/python/
 def pythonVersion = '3.6.15'
 
+// Version of openSUSE Leap that this build against.
+def leapVersion = '15.2'
+
 // Tokenize to enable major.minor image tags (e.g. make a 3.10 tag when building 3.10.4).
 def (pyMajor, pyMinor, pyBugfix) = pythonVersion.tokenize('.')
 
@@ -44,8 +47,8 @@ pipeline {
             steps {
                 script {
                     publishCsmDockerImage(image: env.NAME, tag: env.VERSION, isStable: isStable)
-                    publishCsmDockerImage(image: env.NAME, tag: env.PY_FULL_VERSION, isStable: isStable)
-                    publishCsmDockerImage(image: env.NAME, tag: env.PY_VERSION, isStable: isStable)
+                    publishCsmDockerImage(image: env.NAME, tag: "${env.PY_FULL_VERSION}_leap${leapVersion}", isStable: isStable)
+                    publishCsmDockerImage(image: env.NAME, tag: "${env.PY_VERSION}_leap${leapVersion}", isStable: isStable)
                 }
             }
         }
