@@ -20,10 +20,9 @@ pipeline {
     }
 
     environment {
-        DESCRIPTION = "CRAY System Management SLE Server Python Build Image"
         DOCKER_ARGS = getDockerBuildArgs(name: env.NAME, description: env.DESCRIPTION)
         DOCKER_BUILDKIT = 1
-        NAME = "csm-docker-sle-python"
+        NAME = getRepoName()
         PY_FULL_VERSION = "${pythonVersion}"
         PY_VERSION = "${pyMajor}.${pyMinor}"
         VERSION = "${GIT_COMMIT[0..6]}"
@@ -47,10 +46,8 @@ pipeline {
                     publishCsmDockerImage(image: env.NAME, tag: env.VERSION, isStable: isStable)
                     publishCsmDockerImage(image: env.NAME, tag: env.PY_FULL_VERSION, isStable: isStable)
                     publishCsmDockerImage(image: env.NAME, tag: env.PY_VERSION, isStable: isStable)
-                    publishCsmDockerImage(image: env.NAME, tag: "latest", isStable: isStable)
                 }
             }
         }
-
     }
 }

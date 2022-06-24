@@ -31,4 +31,3 @@ image:
 	docker build --secret id=SLES_REGISTRATION_CODE --pull ${DOCKER_ARGS} --build-arg PY_VERSION=${PY_VERSION} --build-arg PY_FULL_VERSION=${PY_FULL_VERSION} --tag '${NAME}:${VERSION}' .
 	docker tag '${NAME}:${VERSION}' ${NAME}:${PY_FULL_VERSION}
 	docker tag '${NAME}:${VERSION}' ${NAME}:${PY_VERSION}
-	docker tag '${NAME}:${VERSION}' ${NAME}:latest
