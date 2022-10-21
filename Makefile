@@ -24,10 +24,17 @@ DOCKER_BUILDKIT ?= ${DOCKER_BUILDKIT}
 PY_FULL_VERSION := $(shell awk -v replace="'" '/pythonVersion/{gsub(replace,"", $$NF); print $$NF; exit}' Jenkinsfile.github)
 PY_VERSION := $(shell echo ${PY_FULL_VERSION} | awk -F '.' '{print $$1"."$$2}')
 VERSION ?= ${VERSION}
+ifeq ($(TIMESTAMP),)
+TIMESTAMP := $(shell date '+%Y%m%d%H%M%S')
+endif
 
 all: image
 
 image:
 	docker build --secret id=SLES_REGISTRATION_CODE --pull ${DOCKER_ARGS} --build-arg PY_VERSION=${PY_VERSION} --build-arg PY_FULL_VERSION=${PY_FULL_VERSION} --tag '${NAME}:${VERSION}' .
-	docker tag '${NAME}:${VERSION}' ${NAME}:${PY_FULL_VERSION}
+	docker tag '${NAME}:${VERSION}' ${NAME}:${VERSION}-${TIMESTAMP}
 	docker tag '${NAME}:${VERSION}' ${NAME}:${PY_VERSION}
+	docker tag '${NAME}:${VERSION}' ${NAME}:${PY_FULL_VERSION}
+	docker tag '${NAME}:${VERSION}' ${NAME}:${PY_FULL_VERSION}-${VERSION}
+	docker tag '${NAME}:${VERSION}' ${NAME}:${PY_FULL_VERSION}-${VERSION}-${TIMESTAMP}
+	docker tag '${NAME}:${VERSION}' ${NAME}:${PY_FULL_VERSION}-${VERSION}-${TIMESTAMP}
