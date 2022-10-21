@@ -53,6 +53,9 @@ pipeline {
         timestamps()
     }
 
+    // Run every week on Sunday at 4 PM, long after the base image has rebuilt from that morning.
+    triggers{ cron('H 16 * * 0') }
+
     environment {
         DOCKER_ARGS = getDockerBuildArgs(name: getRepoName(), description: 'A build environment for Python.')
         DOCKER_BUILDKIT = 1
