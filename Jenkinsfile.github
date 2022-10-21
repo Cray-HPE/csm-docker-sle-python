@@ -26,7 +26,7 @@
 @Library('csm-shared-library@main') _
 
 // Find a .tar.gz here: https://www.python.org/ftp/python/
-def pythonVersion = '3.10.4'
+def pythonVersion = '3.6.15'
 
 // Tokenize to enable major.minor image tags (e.g. make a 3.10 tag when building 3.10.4).
 def (pyMajor, pyMinor, pyBugfix) = pythonVersion.tokenize('.')
