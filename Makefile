@@ -37,4 +37,3 @@ image:
 	docker tag '${NAME}:${VERSION}' ${NAME}:${PY_FULL_VERSION}
 	docker tag '${NAME}:${VERSION}' ${NAME}:${PY_FULL_VERSION}-${VERSION}
 	docker tag '${NAME}:${VERSION}' ${NAME}:${PY_FULL_VERSION}-${VERSION}-${TIMESTAMP}
-	docker tag '${NAME}:${VERSION}' ${NAME}:${PY_FULL_VERSION}-${VERSION}-${TIMESTAMP}
