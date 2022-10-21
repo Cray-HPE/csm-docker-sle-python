@@ -91,10 +91,10 @@ pipeline {
                             - Major.Minor.Patch                   (e.g. 3.10.4)
                             - Major.Minor                         (e.g. 3.10)
                         */
+                        publishCsmDockerImage(image: env.NAME, tag: "${pyMajor}.${pyMinor}", isStable: isStable)
                         publishCsmDockerImage(image: env.NAME, tag: "${pythonVersion}", isStable: isStable)
                         publishCsmDockerImage(image: env.NAME, tag: "${pythonVersion}-${env.VERSION}", isStable: isStable)
                         publishCsmDockerImage(image: env.NAME, tag: "${pythonVersion}-${env.VERSION}-${env.TIMESTAMP}", isStable: isStable)
-                        publishCsmDockerImage(image: env.NAME, tag: "${pyMajor}.${pyMinor}-${env.VERSION}-${env.TIMESTAMP}", isStable: isStable)
                     } else {
                         /*
                         Publish these tags on unstable:
