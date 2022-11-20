@@ -2,16 +2,8 @@
 
 A SLE Server Python Docker image used for RPM builds.
 
-== Available Images
-
-See a list of available Python Images with `git tag`, but in general there are:
-
-* `3.10`, and `3.10.4`
-* `3.8` and `3.8.13`
-* `3.6` and `3.6.15`
-* `3.6_leap15.2` and `3.6.15_leap15.2`
-
-Tags can also be seen directly at https://artifactory.algol60.net/artifactory/csm-docker/stable/csm-docker-sle-python.
+Available images can only be seen by querying the Docker API or
+https://artifactory.algol60.net/artifactory/csm-docker/stable/csm-docker-sle-python[visiting the registry itself].
 
 == Building
 
@@ -22,23 +14,23 @@ The provided `Makefile` adds Jenkins Pipeline variables to the `docker build` co
 export DOCKER_BUILDKIT=1
 export SLES_REGISTRATION_CODE=<registration_code>
 
-# Build Python 3.8.13
-docker build --secret id=SLES_REGISTRATION_CODE --build-arg PY_FULL_VERSION=3.10.4 .
-
+# Build Python 3.10.8
+docker build --secret id=SLES_REGISTRATION_CODE --build-arg PY_FULL_VERSION=3.10.8 .
 ----
 
 == Running
 
 [source,bash]
 ----
-# Python Major Minor Version
-docker run -it artifactory.algol60.net/csm-docker/stable/csm-docker-sle-python:3.8
+# Python version (major.minor)
+docker run -it artifactory.algol60.net/csm-docker/stable/csm-docker-sle-python:3.10-SLES15.4
 
-# Python Version
-docker run -it artifactory.algol60.net/csm-docker/stable/csm-docker-sle-python:3.8.13
+# Python version (major.minor.bugfix)
+docker run -it artifactory.algol60.net/csm-docker/stable/csm-docker-sle-python:3.10.8
 
-# Git Hash
+# Python version (major.minor.bugfix) and distro
 docker run -it artifactory.algol60.net/csm-docker/stable/csm-docker-sle-python:<hash>
+docker run -it artifactory.algol60.net/csm-docker/stable/csm-docker-sle-python:3.10.8-SLES15.4
 ----
 
 == Python Version(s)
@@ -47,15 +39,18 @@ The version is controlled by the `Jenkinsfile`.
 
 Unstable image tags will publish using these tags:
 
-* `[HASH]`
-* `[HASH]-[TIMESTAMP]`
+* `[DISTRO]-[HASH]`
+* `[DISTRO]-[HASH]-[TIMESTAMP]`
 
 Stable image tags will publish using these tags:
 
+.The `[MAJOR.MINOR]` image is only created against the latest distro.
 * `[MAJOR.MINOR]`
+* `[MAJOR.MINOR]-[DISTRO]`
 * `[MAJOR.MINOR.PATCH]`
-* `[MAJOR.MINOR.PATCH]-[HASH]`
-* `[MAJOR.MINOR.PATCH]-[HASH]-[TIMESTAMP]`
+* `[MAJOR.MINOR.PATCH]-[DISTRO]`
+* `[MAJOR.MINOR.PATCH]-[DISTRO]-[HASH]`
+* `[MAJOR.MINOR.PATCH]-[DISTRO]-[HASH]-[TIMESTAMP]`
 
 === Updating Python
 
