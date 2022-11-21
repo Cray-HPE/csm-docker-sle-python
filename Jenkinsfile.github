@@ -26,10 +26,11 @@
 @Library('csm-shared-library@main') _
 
 // Find a .tar.gz here: https://www.python.org/ftp/python/
-def pythonVersion = '3.10.4'
-
+def pythonVersion = '3.10.8'
 // Tokenize to enable major.minor image tags (e.g. make a 3.10 tag when building 3.10.4).
 def (pyMajor, pyMinor, pyBugfix) = pythonVersion.tokenize('.')
+// Define the distro that the major.minor and major.minor.patch Docker tags publish to.
+def mainSleVersion = '15.4'
 
 // Disable pr-merge builds; node-image pipeline doesn't use the PR images at all.
 if (env.BRANCH_NAME ==~ ~"^PR-\\d+") {
@@ -42,6 +43,7 @@ if (env.BRANCH_NAME ==~ ~"^PR-\\d+") {
 def promotionToken = ~"(main|maint\\/.*)"
 def isStable = env.BRANCH_NAME ==~ promotionToken ? true : false
 pipeline {
+
     agent {
         label "metal-gcp-builder"
     }
@@ -54,7 +56,7 @@ pipeline {
     }
 
     // Run every week on Sunday at 4 PM, long after the base image has rebuilt from that morning.
-    triggers{ cron('H 16 * * 0') }
+    triggers { cron('H 16 * * 0') }
 
     environment {
         DOCKER_ARGS = getDockerBuildArgs(name: getRepoName(), description: 'A build environment for Python.')
@@ -68,41 +70,68 @@ pipeline {
 
     stages {
 
-        stage('Build') {
-            steps {
-                withCredentials([
-                    string(credentialsId: 'sles15-registration-code', variable: 'SLES_REGISTRATION_CODE')
-                ]) {
-                    sh "make image"
+        stage('Build & Publish') {
+
+            matrix {
+
+                axes {
+                    axis {
+                        name 'sleVersion'
+                        values 15.3, 15.4
+                    }
                 }
-            }
-        }
 
-        stage('Publish') {
-            steps {
-                script {
+                stages {
 
-                    // Only overwrite an image if this is a stable build.
-                    if (isStable) {
-                        /*
-                        Publish these tags on stable:
-                            - Major.Minor.Patch-Hash-Timestamp    (e.g. 3.10.4-dhckj3-20221017133121)
-                            - Major.Minor.Patch-Hash-Timestamp    (e.g. 3.10.4-dhckj3)
-                            - Major.Minor.Patch                   (e.g. 3.10.4)
-                            - Major.Minor                         (e.g. 3.10)
-                        */
-                        publishCsmDockerImage(image: env.NAME, tag: "${pyMajor}.${pyMinor}", isStable: isStable)
-                        publishCsmDockerImage(image: env.NAME, tag: "${pythonVersion}", isStable: isStable)
-                        publishCsmDockerImage(image: env.NAME, tag: "${pythonVersion}-${env.VERSION}", isStable: isStable)
-                        publishCsmDockerImage(image: env.NAME, tag: "${pythonVersion}-${env.VERSION}-${env.TIMESTAMP}", isStable: isStable)
-                    } else {
-                        /*
-                        Publish these tags on unstable:
-                            - Hash                          (e.g. dhckj3)
-                            - Hash-Timestamp                (e.g. dhckj3-20221017133121)
-                        */
-                        publishCsmDockerImage(image: env.NAME, tag: "${env.VERSION}", isStable: isStable)
-                        publishCsmDockerImage(image: env.NAME, tag: "${env.VERSION}-${env.TIMESTAMP}", isStable: isStable)
+                    stage('Build') {
+                        environment {
+                            SLE_VERSION = "${sleVersion}"
+                        }
+                        steps {
+                            withCredentials([
+                                    string(credentialsId: 'sles15-registration-code', variable: 'SLES_REGISTRATION_CODE')
+                            ]) {
+                                sh "make image"
+                            }
+                        }
+                    }
+
+                    stage('Publish') {
+                        steps {
+                            script {
+
+                                // Only overwrite an image if this is a stable build.
+                                if (isStable) {
+                                    /*
+                                    Publish these tags on stable:
+                                        - Major.Minor.Patch-Distro-Hash-Timestamp    (e.g. 3.10.8-SLES15.4-dhckj3-20221017133121)
+                                        - Major.Minor.Patch-Distro-Hash-Timestamp    (e.g. 3.10.8-SLES15.4-dhckj3)
+                                        - Major.Minor.Patch-Distro                   (e.g. 3.10.8-SLES15.4)
+                                        - Major.Minor.Patch                          (e.g. 3.10.8)
+                                        - Major.Minor-Distro                         (e.g. 3.10-SLES15.4)
+                                        - Major.Minor                                (e.g. 3.10)
+                                    */
+                                    publishCsmDockerImage(image: env.NAME, tag: "${pythonVersion}-SLES${sleVersion}-${env.VERSION}-${env.TIMESTAMP}", isStable: isStable)
+                                    publishCsmDockerImage(image: env.NAME, tag: "${pythonVersion}-SLES-${sleVersion}-${env.VERSION}", isStable: isStable)
+                                    publishCsmDockerImage(image: env.NAME, tag: "${pythonVersion}-SLES${sleVersion}", isStable: isStable)
+                                    publishCsmDockerImage(image: env.NAME, tag: "${pyMajor}.${pyMinor}-SLES${sleVersion}", isStable: isStable)
+
+                                    // Only publish the simple version images on the latest/newest base image.
+                                    if ("${sleVersion}" == "${mainSleVersion}") {
+                                        publishCsmDockerImage(image: env.NAME, tag: "${pythonVersion}", isStable: isStable)
+                                        publishCsmDockerImage(image: env.NAME, tag: "${pyMajor}.${pyMinor}", isStable: isStable)
+                                    }
+                                } else {
+                                    /*
+                                    Publish these tags on unstable:
+                                        - Hash-Timestamp                (e.g. SLES15.4-dhckj3-20221017133121)
+                                        - Hash                          (e.g. SLES15.4-dhckj3)
+                                    */
+                                    publishCsmDockerImage(image: env.NAME, tag: "SLES${sleVersion}-${env.VERSION}-${env.TIMESTAMP}", isStable: isStable)
+                                    publishCsmDockerImage(image: env.NAME, tag: "SLES${sleVersion}-${env.VERSION}", isStable: isStable)
+                                }
+                            }
+                        }
                     }
                 }
             }
