@@ -29,7 +29,6 @@ docker run -it artifactory.algol60.net/csm-docker/stable/csm-docker-sle-python:3
 docker run -it artifactory.algol60.net/csm-docker/stable/csm-docker-sle-python:3.10.8
 
 # Python version (major.minor.bugfix) and distro
-docker run -it artifactory.algol60.net/csm-docker/stable/csm-docker-sle-python:<hash>
 docker run -it artifactory.algol60.net/csm-docker/stable/csm-docker-sle-python:3.10.8-SLES15.4
 ----
 

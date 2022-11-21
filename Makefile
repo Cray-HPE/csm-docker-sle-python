@@ -60,8 +60,9 @@ image: print
 	docker tag '${NAME}:${VERSION}' ${NAME}:SLES${SLE_VERSION}-${VERSION}
 	docker tag '${NAME}:${VERSION}' ${NAME}:SLES${SLE_VERSION}-${VERSION}-${TIMESTAMP}
 	docker tag '${NAME}:${VERSION}' ${NAME}:${PY_VERSION}
-	docker tag '${NAME}:${VERSION}' ${NAME}:${PY_FULL_VERSION}
 	docker tag '${NAME}:${VERSION}' ${NAME}:${PY_VERSION}-SLES${SLE_VERSION}
+	docker tag '${NAME}:${VERSION}' ${NAME}:${PY_FULL_VERSION}
+	docker tag '${NAME}:${VERSION}' ${NAME}:${PY_FULL_VERSION}-SLES${SLE_VERSION}
 	docker tag '${NAME}:${VERSION}' ${NAME}:${PY_FULL_VERSION}-SLES${SLE_VERSION}
 	docker tag '${NAME}:${VERSION}' ${NAME}:${PY_FULL_VERSION}-SLES${SLE_VERSION}-${VERSION}
 	docker tag '${NAME}:${VERSION}' ${NAME}:${PY_FULL_VERSION}-SLES${SLE_VERSION}-${VERSION}-${TIMESTAMP}
