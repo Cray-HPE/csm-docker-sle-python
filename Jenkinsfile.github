@@ -112,7 +112,7 @@ pipeline {
                                         - Major.Minor                                (e.g. 3.10)
                                     */
                                     publishCsmDockerImage(image: env.NAME, tag: "${pythonVersion}-SLES${sleVersion}-${env.VERSION}-${env.TIMESTAMP}", isStable: isStable)
-                                    publishCsmDockerImage(image: env.NAME, tag: "${pythonVersion}-SLES-${sleVersion}-${env.VERSION}", isStable: isStable)
+                                    publishCsmDockerImage(image: env.NAME, tag: "${pythonVersion}-SLES${sleVersion}-${env.VERSION}", isStable: isStable)
                                     publishCsmDockerImage(image: env.NAME, tag: "${pythonVersion}-SLES${sleVersion}", isStable: isStable)
                                     publishCsmDockerImage(image: env.NAME, tag: "${pyMajor}.${pyMinor}-SLES${sleVersion}", isStable: isStable)
 
