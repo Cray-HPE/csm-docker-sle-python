@@ -44,8 +44,8 @@ WORKDIR "/root/.python/Python-$PY_FULL_VERSION"
 RUN ./configure --enable-optimizations --enable-shared LDFLAGS='-Wl,-rpath /usr/local/lib' \
     && make altinstall
 
-RUN ln -snf "../local/bin/python$PY_VERSION" /usr/bin/python3 \
-    && ln -snf "../local/bin/pip$PY_VERSION" /usr/bin/pip3
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/local/bin/python${PY_VERSION} 1 \
+    && update-alternatives --install /usr/bin/pip3 pip3 /usr/local/bin/pip${PY_VERSION} 1
 
 RUN python3 -m pip install -U 'pip<23.0' \
     && python3 -m pip install -U 'setuptools<62.4.0' \
