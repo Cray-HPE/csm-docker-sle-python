@@ -31,6 +31,8 @@ ARG PY_VERSION=''
 RUN zypper refresh \
     && zypper --non-interactive install --no-recommends --force-resolution \
     libffi-devel \
+    python-rpm-generators \
+    python-rpm-macros \
     && zypper clean -a \
     && SUSEConnect --cleanup
 
