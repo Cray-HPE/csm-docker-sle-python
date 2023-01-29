@@ -47,7 +47,9 @@ RUN ./configure --enable-optimizations --enable-shared LDFLAGS='-Wl,-rpath /usr/
     && make altinstall
 
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/local/bin/python${PY_VERSION} 1 \
-    && update-alternatives --install /usr/bin/pip3 pip3 /usr/local/bin/pip${PY_VERSION} 1
+    && update-alternatives --install /usr/bin/pip3 pip3 /usr/local/bin/pip${PY_VERSION} 1 \
+    && update-alternatives --install /usr/bin/python${PY_VERSION} python${PY_VERSION} /usr/local/bin/python${PY_VERSION} 1 \
+    && update-alternatives --install /usr/bin/pip${PY_VERSION} pip${PY_VERSION} /usr/local/bin/pip${PY_VERSION} 1
 
 RUN python3 -m pip install -U 'pip<23.0' \
     && python3 -m pip install -U 'setuptools<62.4.0' \
