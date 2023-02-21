@@ -19,7 +19,8 @@
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
-FROM artifactory.algol60.net/csm-docker/stable/csm-docker-sle:15.3 AS base
+ARG SLE_VERSION
+FROM artifactory.algol60.net/csm-docker/stable/csm-docker-sle:${SLE_VERSION} AS base
 
 RUN --mount=type=secret,id=SLES_REGISTRATION_CODE SUSEConnect -r "$(cat /run/secrets/SLES_REGISTRATION_CODE)"
 CMD ["/bin/bash"]
@@ -31,6 +32,8 @@ ARG PY_VERSION=''
 RUN zypper refresh \
     && zypper --non-interactive install --no-recommends --force-resolution \
     libffi-devel \
+    python-rpm-generators \
+    python-rpm-macros \
     && zypper clean -a \
     && SUSEConnect --cleanup
 
@@ -43,12 +46,14 @@ WORKDIR "/root/.python/Python-$PY_FULL_VERSION"
 RUN ./configure --enable-optimizations --enable-shared LDFLAGS='-Wl,-rpath /usr/local/lib' \
     && make altinstall
 
-RUN ln -snf "../local/bin/python$PY_VERSION" /usr/bin/python3 \
-    && ln -snf "../local/bin/pip$PY_VERSION" /usr/bin/pip3
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/local/bin/python${PY_VERSION} 1 \
+    && update-alternatives --install /usr/bin/pip3 pip3 /usr/local/bin/pip${PY_VERSION} 1 \
+    && update-alternatives --install /usr/bin/python${PY_VERSION} python${PY_VERSION} /usr/local/bin/python${PY_VERSION} 1 \
+    && update-alternatives --install /usr/bin/pip${PY_VERSION} pip${PY_VERSION} /usr/local/bin/pip${PY_VERSION} 1
 
-RUN python3 -m pip install -U 'pip<23.0' \
-    && python3 -m pip install -U 'setuptools<62.4.0' \
-    && python3 -m pip install -U 'virtualenv<20.15.0' \
-    && python3 -m pip install -U 'wheel<0.38.0'
+RUN python3 -m pip install -U 'pip' \
+    && python3 -m pip install -U 'setuptools' \
+    && python3 -m pip install -U 'virtualenv' \
+    && python3 -m pip install -U 'wheel'
 
 WORKDIR /build
