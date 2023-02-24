@@ -35,8 +35,6 @@ ifeq ($(PY_FULL_VERSION),)
 export PY_FULL_VERSION := $(shell awk -v replace="'" '/pythonVersion/{gsub(replace,"", $$NF); print $$NF; exit}' Jenkinsfile.github)
 endif
 
-export PY_VERSION := $(shell echo ${PY_FULL_VERSION} | awk -F '.' '{print $$1"."$$2}')
-
 ifeq ($(TIMESTAMP),)
 export TIMESTAMP := $(shell date '+%Y%m%d%H%M%S')
 endif
@@ -57,10 +55,32 @@ print:
 	@printf "%-20s: %s\n" Version $(VERSION)
 
 image: print
-	docker build --secret id=SLES_REGISTRATION_CODE --pull ${DOCKER_ARGS} --build-arg SLE_VERSION=${SLE_VERSION} --build-arg PY_VERSION=${PY_VERSION} --build-arg PY_FULL_VERSION=${PY_FULL_VERSION} --tag '${NAME}:${PY_VERSION}-SLES${SLE_VERSION}' .
-	docker tag '${NAME}:${PY_VERSION}-SLES${SLE_VERSION}' '${NAME}:SLES${SLE_VERSION}-${VERSION}'
-	docker tag '${NAME}:${PY_VERSION}-SLES${SLE_VERSION}' '${NAME}:SLES${SLE_VERSION}-${VERSION}-${TIMESTAMP}'
-	docker tag '${NAME}:${PY_VERSION}-SLES${SLE_VERSION}' '${NAME}:${PY_FULL_VERSION}-SLES${SLE_VERSION}'
-	docker tag '${NAME}:${PY_VERSION}-SLES${SLE_VERSION}' '${NAME}:${PY_FULL_VERSION}-SLES${SLE_VERSION}'
-	docker tag '${NAME}:${PY_VERSION}-SLES${SLE_VERSION}' '${NAME}:${PY_FULL_VERSION}-SLES${SLE_VERSION}-${VERSION}'
-	docker tag '${NAME}:${PY_VERSION}-SLES${SLE_VERSION}' '${NAME}:${PY_FULL_VERSION}-SLES${SLE_VERSION}-${VERSION}-${TIMESTAMP}'
+	docker buildx build \
+        ${DOCKER_ARGS} \
+        ${BUILD_ARGS} \
+        --cache-to type=local,dest=docker-build-cache  \
+        --platform linux/amd64,linux/arm64 \
+        --builder $$(docker buildx create --platform linux/amd64,linux/arm64) \
+        --secret id=SLES_REGISTRATION_CODE \
+        --pull \
+        .
+
+	docker buildx create --use
+	
+	docker buildx build \
+        ${BUILD_ARGS} \
+        ${DOCKER_ARGS} \
+		--cache-from type=local,src=docker-build-cache \
+        --platform linux/amd64 \
+        --secret id=SLES_REGISTRATION_CODE \
+        --pull \
+		--load \
+        -t '${NAME}:SLES${SLE_VERSION}-${VERSION}' \
+        -t '${NAME}:SLES${SLE_VERSION}-${VERSION}-${TIMESTAMP}' \
+        -t '${NAME}:${PY_VERSION}-SLES${SLE_VERSION}' \
+        -t '${NAME}:${PY_FULL_VERSION}-SLES${SLE_VERSION}' \
+        -t '${NAME}:${PY_FULL_VERSION}-SLES${SLE_VERSION}-${VERSION}' \
+        -t '${NAME}:${PY_FULL_VERSION}-SLES${SLE_VERSION}-${VERSION}-${TIMESTAMP}' \
+        -t '${NAME}:${PY_FULL_VERSION}' \
+        -t '${NAME}:${PY_MAJOR}.${PY_MINOR}' \
+        .
