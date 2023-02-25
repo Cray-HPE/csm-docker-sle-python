@@ -84,29 +84,18 @@ pipeline {
                     if (isStable) {
                         /*
                         Publish these tags on stable:
-                            - Major.Minor-Distro-Hash-Timestamp    (e.g. 3.9-SLES15.3-dhckj3-20221017133121)
-                            - Major.Minor-Distro-Hash-Timestamp    (e.g. 3.9-SLES15.3-dhckj3)
-                            - Major.Minor-Distro                   (e.g. 3.9-SLES15.3)
-                            - Major.Minor-Hash-Timestamp           (e.g. 3.9-dhckj3-20221017133121)
-                            - Major.Minor-Hash                     (e.g. 3.9-dhckj3)
                             - Major.Minor                          (e.g. 3.9)
                         */
-                        publishCsmDockerImage(image: env.NAME, tag: "${pythonVersion}-SLES${sleVersion}-${env.VERSION}-${env.TIMESTAMP}", isStable: isStable)
-                        publishCsmDockerImage(image: env.NAME, tag: "${pythonVersion}-SLES${sleVersion}-${env.VERSION}", isStable: isStable)
-                        publishCsmDockerImage(image: env.NAME, tag: "${pythonVersion}-SLES${sleVersion}", isStable: isStable)
-                        publishCsmDockerImage(image: env.NAME, tag: "${pythonVersion}-${env.VERSION}-${env.TIMESTAMP}", isStable: isStable)
-                        publishCsmDockerImage(image: env.NAME, tag: "${pythonVersion}-${env.VERSION}", isStable: isStable)
                         publishCsmDockerImage(image: env.NAME, tag: "${pythonVersion}", isStable: isStable)
 
-                    } else {
-                        /*
-                        Publish these tags on unstable:
-                            - Major.Minor-Hash-Timestamp           (e.g. 3.9-dhckj3-20221017133121)
-                            - Major.Minor-Hash                     (e.g. 3.9-dhckj3)
-                        */
-                        publishCsmDockerImage(image: env.NAME, tag: "${pythonVersion}-${env.VERSION}-${env.TIMESTAMP}", isStable: isStable)
-                        publishCsmDockerImage(image: env.NAME, tag: "${pythonVersion}-${env.VERSION}", isStable: isStable)
                     }
+                    /*
+                    Always publish these tags:
+                        - Major.Minor-Hash-Timestamp           (e.g. 3.9-dhckj3-20221017133121)
+                        - Major.Minor-Hash                     (e.g. 3.9-dhckj3)
+                    */
+                    publishCsmDockerImage(image: env.NAME, tag: "${pythonVersion}-${env.VERSION}-${env.TIMESTAMP}", isStable: isStable)
+                    publishCsmDockerImage(image: env.NAME, tag: "${pythonVersion}-${env.VERSION}", isStable: isStable)
                 }
             }
         }

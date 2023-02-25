@@ -57,8 +57,5 @@ print:
 
 image: print
 	docker build --secret id=SLES_REGISTRATION_CODE --pull ${DOCKER_ARGS} --build-arg SLE_VERSION=${SLE_VERSION} --build-arg PY_VERSION=${PY_VERSION} --tag '${NAME}:${PY_VERSION}' .
-	docker tag '${NAME}:${PY_VERSION}' '${NAME}:SLES${SLE_VERSION}'
-	docker tag '${NAME}:${PY_VERSION}' '${NAME}:SLES${SLE_VERSION}-${VERSION}'
-	docker tag '${NAME}:${PY_VERSION}' '${NAME}:SLES${SLE_VERSION}-${VERSION}-${TIMESTAMP}'
 	docker tag '${NAME}:${PY_VERSION}' '${NAME}:${PY_VERSION}-${VERSION}'
 	docker tag '${NAME}:${PY_VERSION}' '${NAME}:${PY_VERSION}-${VERSION}-${TIMESTAMP}'
