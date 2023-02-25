@@ -82,7 +82,7 @@ pipeline {
                 axes {
                     axis {
                         name 'SLE_VERSION'
-                        values '15.3', '15.4'
+                        values '15.4', '15.3'
                     }
                 }
 
