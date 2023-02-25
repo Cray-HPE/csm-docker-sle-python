@@ -35,7 +35,6 @@ ifeq ($(PY_VERSION),)
 export PY_VERSION := $(shell awk -v replace="'" '/pythonVersion/{gsub(replace,"", $$NF); print $$NF; exit}' Jenkinsfile.github)
 endif
 
-
 ifeq ($(TIMESTAMP),)
 export TIMESTAMP := $(shell date '+%Y%m%d%H%M%S')
 endif
@@ -56,6 +55,27 @@ print:
 	@printf "%-20s: %s\n" Version $(VERSION)
 
 image: print
-	docker build --secret id=SLES_REGISTRATION_CODE --pull ${DOCKER_ARGS} --build-arg SLE_VERSION=${SLE_VERSION} --build-arg PY_VERSION=${PY_VERSION} --tag '${NAME}:${PY_VERSION}' .
-	docker tag '${NAME}:${PY_VERSION}' '${NAME}:${PY_VERSION}-${VERSION}'
-	docker tag '${NAME}:${PY_VERSION}' '${NAME}:${PY_VERSION}-${VERSION}-${TIMESTAMP}'
+	docker buildx build \
+        ${DOCKER_ARGS} \
+        ${BUILD_ARGS} \
+        --cache-to type=local,dest=docker-build-cache  \
+        --platform linux/amd64,linux/arm64 \
+        --builder $$(docker buildx create --platform linux/amd64,linux/arm64) \
+        --secret id=SLES_REGISTRATION_CODE \
+        --pull \
+        .
+
+	docker buildx create --use
+
+	docker buildx build \
+        ${DOCKER_ARGS} \
+        ${BUILD_ARGS} \
+        --cache-from type=local,src=docker-build-cache \
+        --platform linux/amd64 \
+        --secret id=SLES_REGISTRATION_CODE \
+        --pull \
+        --load \
+        -t '${NAME}:${PY_VERSION}' \
+        -t '${NAME}:${PY_VERSION}-${VERSION}-${TIMESTAMP}' \
+        -t '${NAME}:${PY_VERSION}-${VERSION}' \
+        .
