@@ -15,7 +15,7 @@ export DOCKER_BUILDKIT=1
 export SLES_REGISTRATION_CODE=<registration_code>
 
 # Build Python 3.10.8
-docker build --secret id=SLES_REGISTRATION_CODE --build-arg PY_FULL_VERSION=3.10.8 .
+docker build --secret id=SLES_REGISTRATION_CODE --build-arg PY_VERSION=3.10 .
 ----
 
 == Running
@@ -23,13 +23,10 @@ docker build --secret id=SLES_REGISTRATION_CODE --build-arg PY_FULL_VERSION=3.10
 [source,bash]
 ----
 # Python version (major.minor)
-docker run -it artifactory.algol60.net/csm-docker/stable/csm-docker-sle-python:3.10-SLES15.4
-
-# Python version (major.minor.bugfix)
-docker run -it artifactory.algol60.net/csm-docker/stable/csm-docker-sle-python:3.10.8
+docker run -it artifactory.algol60.net/csm-docker/stable/csm-docker-sle-python:3.10
 
 # Python version (major.minor.bugfix) and distro
-docker run -it artifactory.algol60.net/csm-docker/stable/csm-docker-sle-python:3.10.8-SLES15.4
+docker run -it artifactory.algol60.net/csm-docker/stable/csm-docker-sle-python:3.10-SLES15.4
 ----
 
 == Python Version(s)
@@ -45,11 +42,11 @@ Stable image tags will publish using these tags:
 
 .The `[MAJOR.MINOR]` image is only created against the latest distro.
 * `[MAJOR.MINOR]`
+* `[MAJOR.MINOR]-[HASH]`
+* `[MAJOR.MINOR]-[HASH]-[TIMESTAMP]`
 * `[MAJOR.MINOR]-[DISTRO]`
-* `[MAJOR.MINOR.PATCH]`
-* `[MAJOR.MINOR.PATCH]-[DISTRO]`
-* `[MAJOR.MINOR.PATCH]-[DISTRO]-[HASH]`
-* `[MAJOR.MINOR.PATCH]-[DISTRO]-[HASH]-[TIMESTAMP]`
+* `[MAJOR.MINOR]-[DISTRO]-[HASH]`
+* `[MAJOR.MINOR]-[DISTRO]-[HASH]-[TIMESTAMP]`
 
 === Updating Python
 

@@ -1,17 +1,17 @@
 # MIT License
-# 
-# (C) Copyright [2021-2022] Hewlett Packard Enterprise Development LP
-# 
+#
+# (C) Copyright 2022-2023 Hewlett Packard Enterprise Development LP
+#
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
 # to deal in the Software without restriction, including without limitation
 # the rights to use, copy, modify, merge, publish, distribute, sublicense,
 # and/or sell copies of the Software, and to permit persons to whom the
 # Software is furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included
 # in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
@@ -26,34 +26,35 @@ RUN --mount=type=secret,id=SLES_REGISTRATION_CODE SUSEConnect -r "$(cat /run/sec
 CMD ["/bin/bash"]
 FROM base AS py-base
 
-ARG PY_FULL_VERSION=''
 ARG PY_VERSION=''
 
+# Install helpful build environment items:
+# NOTE: RPMs take precedence to PIP packages; install RPMs when available, and pip packages otherwise to avoid
+#       file conflicts.
+# - python-rpm-*      : Specfile macros.
+# - python-base       : Base Python package.
+# - python-devel      : Extensions and headers for building Python modules.
+# - python-pip        : The published/paired pip for the given Python base.
+# - python-setuptools : The published/paired setuptools for the given Python base.
 RUN zypper refresh \
     && zypper --non-interactive install --no-recommends --force-resolution \
-    libffi-devel \
     python-rpm-generators \
     python-rpm-macros \
+    python${PY_VERSION/\./}-base \
+    python${PY_VERSION/\./}-devel \
+    python${PY_VERSION/\./}-pip \
+    python${PY_VERSION/\./}-setuptools \
     && zypper clean -a \
     && SUSEConnect --cleanup
 
-WORKDIR /root/.python
-RUN curl -O "https://www.python.org/ftp/python/$PY_FULL_VERSION/Python-$PY_FULL_VERSION.tar.xz" \
-    && tar -xvf "./Python-$PY_FULL_VERSION.tar.xz" \
-    && rm "Python-$PY_FULL_VERSION.tar.xz"
+# Ensure python3 and pip3 point to our desired Python version.
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python${PY_VERSION} 1 \
+    && update-alternatives --install /usr/bin/pip3 pip3 /usr/bin/pip${PY_VERSION} 1
 
-WORKDIR "/root/.python/Python-$PY_FULL_VERSION"
-RUN ./configure --enable-optimizations --enable-shared LDFLAGS='-Wl,-rpath /usr/local/lib' \
-    && make altinstall
-
-RUN update-alternatives --install /usr/bin/python3 python3 /usr/local/bin/python${PY_VERSION} 1 \
-    && update-alternatives --install /usr/bin/pip3 pip3 /usr/local/bin/pip${PY_VERSION} 1 \
-    && update-alternatives --install /usr/bin/python${PY_VERSION} python${PY_VERSION} /usr/local/bin/python${PY_VERSION} 1 \
-    && update-alternatives --install /usr/bin/pip${PY_VERSION} pip${PY_VERSION} /usr/local/bin/pip${PY_VERSION} 1
-
-RUN python3 -m pip install -U 'pip' \
-    && python3 -m pip install -U 'setuptools' \
-    && python3 -m pip install -U 'virtualenv' \
-    && python3 -m pip install -U 'wheel'
+# Install packages not available via Zypper.
+RUN python3 -m pip install --disable-pip-version-check --no-cache-dir -U \
+    'build' \
+    'virtualenv' \
+    'wheel'
 
 WORKDIR /build
