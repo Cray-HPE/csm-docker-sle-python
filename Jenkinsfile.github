@@ -85,6 +85,10 @@ pipeline {
                         values '15.3', '15.4'
                     }
                 }
+                
+                agent {
+                    label "metal-gcp-builder-large"
+                }
 
                 stages {
 
