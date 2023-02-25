@@ -35,7 +35,6 @@ ifeq ($(PY_VERSION),)
 export PY_VERSION := $(shell awk -v replace="'" '/pythonVersion/{gsub(replace,"", $$NF); print $$NF; exit}' Jenkinsfile.github)
 endif
 
-
 ifeq ($(TIMESTAMP),)
 export TIMESTAMP := $(shell date '+%Y%m%d%H%M%S')
 endif
@@ -67,7 +66,7 @@ image: print
         .
 
 	docker buildx create --use
-	
+
 	docker buildx build \
         ${DOCKER_ARGS} \
         ${BUILD_ARGS} \
@@ -76,11 +75,6 @@ image: print
         --secret id=SLES_REGISTRATION_CODE \
         --pull \
         --load \
-        -t '${NAME}:${PY_VERSION}-SLES${SLE_VERSION}-${VERSION}-${TIMESTAMP}' \
-        -t '${NAME}:${PY_VERSION}-SLES${SLE_VERSION}-${VERSION}' \
-        -t '${NAME}:${PY_VERSION}-SLES${SLE_VERSION}' \
-        -t '${NAME}:${PY_VERSION}-${VERSION}-${TIMESTAMP}' \
-        -t '${NAME}:${PY_VERSION}-${VERSION}' \
         -t '${NAME}:${PY_VERSION}' \
         -t '${NAME}:${PY_VERSION}-${VERSION}-${TIMESTAMP}' \
         -t '${NAME}:${PY_VERSION}-${VERSION}' \
