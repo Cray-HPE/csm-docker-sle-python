@@ -80,10 +80,8 @@ pipeline {
             matrix {
 
                 agent {
-                    node {
-                        label "metal-gcp-builder-large"
-                        customWorkspace "${env.WORKSPACE}/${SLE_VERSION}"
-                    }
+                    label "metal-gcp-builder-large"
+                    customWorkspace "${env.WORKSPACE}/${SLE_VERSION}"
                 }
                 
                 axes {
