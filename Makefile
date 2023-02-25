@@ -78,9 +78,9 @@ image: print
         -t '${NAME}:SLES${SLE_VERSION}-${VERSION}' \
         -t '${NAME}:SLES${SLE_VERSION}-${VERSION}-${TIMESTAMP}' \
         -t '${NAME}:${PY_VERSION}-SLES${SLE_VERSION}' \
-        -t '${NAME}:${PY_FULL_VERSION}-SLES${SLE_VERSION}' \
-        -t '${NAME}:${PY_FULL_VERSION}-SLES${SLE_VERSION}-${VERSION}' \
-        -t '${NAME}:${PY_FULL_VERSION}-SLES${SLE_VERSION}-${VERSION}-${TIMESTAMP}' \
-        -t '${NAME}:${PY_FULL_VERSION}' \
+        -t '${NAME}:${PY_VERSION}-SLES${SLE_VERSION}' \
+        -t '${NAME}:${PY_VERSION}-SLES${SLE_VERSION}-${VERSION}' \
+        -t '${NAME}:${PY_VERSION}-SLES${SLE_VERSION}-${VERSION}-${TIMESTAMP}' \
+        -t '${NAME}:${PY_VERSION}' \
         -t '${NAME}:${PY_MAJOR}.${PY_MINOR}' \
         .
