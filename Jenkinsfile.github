@@ -45,17 +45,7 @@ if (env.BRANCH_NAME ==~ ~"^PR-\\d+") {
 def promotionToken = ~"(main|maint\\/.*)"
 def isStable = env.BRANCH_NAME ==~ promotionToken ? true : false
 pipeline {
-
-    agent {
-        label "metal-gcp-builder"
-    }
-
-    options {
-        buildDiscarder(logRotator(numToKeepStr: "1"))
-        timeout(time: 20, unit: 'MINUTES')
-        disableConcurrentBuilds()
-        timestamps()
-    }
+    agent none
 
     // Run every week on Sunday at 4 PM, long after the base image has rebuilt from that morning.
     triggers { cron('H 16 * * 0') }
@@ -78,12 +68,17 @@ pipeline {
         stage('Build & Publish') {
 
             matrix {
-
+                
                 agent {
                     label "metal-gcp-builder-large"
-                    customWorkspace "${env.WORKSPACE}/${SLE_VERSION}"
                 }
-                
+
+                options {
+                    buildDiscarder(logRotator(numToKeepStr: "1"))
+                    timeout(time: 30, unit: 'MINUTES')
+                    disableConcurrentBuilds()
+                    timestamps()
+    }  
                 axes {
                     axis {
                         name 'SLE_VERSION'
