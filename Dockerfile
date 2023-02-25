@@ -40,10 +40,10 @@ RUN zypper refresh \
     && zypper --non-interactive install --no-recommends --force-resolution \
     python-rpm-generators \
     python-rpm-macros \
-    python${PY_VERSION/\./}-base \
-    python${PY_VERSION/\./}-devel \
-    python${PY_VERSION/\./}-pip \
-    python${PY_VERSION/\./}-setuptools \
+    python${PY_VERSION%%.*}-base \
+    python${PY_VERSION%%.*}-devel \
+    python${PY_VERSION%%.*}-pip \
+    python${PY_VERSION%%.*}-setuptools \
     && zypper clean -a \
     && SUSEConnect --cleanup
 
