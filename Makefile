@@ -1,17 +1,17 @@
 # MIT License
-# 
-# (C) Copyright [2022-2023] Hewlett Packard Enterprise Development LP
-# 
+#
+# (C) Copyright 2022-2023 Hewlett Packard Enterprise Development LP
+#
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
 # to deal in the Software without restriction, including without limitation
 # the rights to use, copy, modify, merge, publish, distribute, sublicense,
 # and/or sell copies of the Software, and to permit persons to whom the
 # Software is furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included
 # in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
@@ -28,11 +28,11 @@ export DOCKER_BUILDKIT ?= 1
 endif
 
 ifeq ($(SLE_VERSION),)
-export SLE_VERSION := $(shell awk -v replace="'" '/mainSleVersion/{gsub(replace,"", $$NF); print $$NF; exit}' Jenkinsfile.github)
+export SLE_VERSION := $(shell awk -v replace="'" '/sleVersion/{gsub(replace,"", $$NF); print $$NF; exit}' Jenkinsfile.github)
 endif
 
-ifeq ($(PY_FULL_VERSION),)
-export PY_FULL_VERSION := $(shell awk -v replace="'" '/pythonVersion/{gsub(replace,"", $$NF); print $$NF; exit}' Jenkinsfile.github)
+ifeq ($(PY_VERSION),)
+export PY_VERSION := $(shell awk -v replace="'" '/pythonVersion/{gsub(replace,"", $$NF); print $$NF; exit}' Jenkinsfile.github)
 endif
 
 ifeq ($(TIMESTAMP),)
@@ -66,21 +66,16 @@ image: print
         .
 
 	docker buildx create --use
-	
+
 	docker buildx build \
-        ${BUILD_ARGS} \
         ${DOCKER_ARGS} \
-		--cache-from type=local,src=docker-build-cache \
+        ${BUILD_ARGS} \
+        --cache-from type=local,src=docker-build-cache \
         --platform linux/amd64 \
         --secret id=SLES_REGISTRATION_CODE \
         --pull \
-		--load \
-        -t '${NAME}:SLES${SLE_VERSION}-${VERSION}' \
-        -t '${NAME}:SLES${SLE_VERSION}-${VERSION}-${TIMESTAMP}' \
-        -t '${NAME}:${PY_VERSION}-SLES${SLE_VERSION}' \
-        -t '${NAME}:${PY_FULL_VERSION}-SLES${SLE_VERSION}' \
-        -t '${NAME}:${PY_FULL_VERSION}-SLES${SLE_VERSION}-${VERSION}' \
-        -t '${NAME}:${PY_FULL_VERSION}-SLES${SLE_VERSION}-${VERSION}-${TIMESTAMP}' \
-        -t '${NAME}:${PY_FULL_VERSION}' \
-        -t '${NAME}:${PY_MAJOR}.${PY_MINOR}' \
+        --load \
+        -t '${NAME}:${PY_VERSION}' \
+        -t '${NAME}:${PY_VERSION}-${VERSION}-${TIMESTAMP}' \
+        -t '${NAME}:${PY_VERSION}-${VERSION}' \
         .

@@ -22,10 +22,6 @@
 ARG SLE_VERSION
 FROM artifactory.algol60.net/csm-docker/stable/csm-docker-sle:${SLE_VERSION} AS base
 
-RUN --mount=type=secret,id=SLES_REGISTRATION_CODE SUSEConnect -r "$(cat /run/secrets/SLES_REGISTRATION_CODE)"
-CMD ["/bin/bash"]
-FROM base AS py-base
-
 ARG PY_VERSION=''
 
 # Install helpful build environment items:
@@ -36,20 +32,16 @@ ARG PY_VERSION=''
 # - python-devel      : Extensions and headers for building Python modules.
 # - python-pip        : The published/paired pip for the given Python base.
 # - python-setuptools : The published/paired setuptools for the given Python base.
+# NOTE: python36 is called python3 in SLE15.2.
 RUN zypper refresh \
     && zypper --non-interactive install --no-recommends --force-resolution \
     python-rpm-generators \
     python-rpm-macros \
-    python${PY_VERSION/\./}-base \
-    python${PY_VERSION/\./}-devel \
-    python${PY_VERSION/\./}-pip \
-    python${PY_VERSION/\./}-setuptools \
-    && zypper clean -a \
-    && SUSEConnect --cleanup
-
-# Ensure python3 and pip3 point to our desired Python version.
-RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python${PY_VERSION} 1 \
-    && update-alternatives --install /usr/bin/pip3 pip3 /usr/bin/pip${PY_VERSION} 1
+    python${PY_VERSION%.*}-base \
+    python${PY_VERSION%.*}-devel \
+    python${PY_VERSION%.*}-pip \
+    python${PY_VERSION%.*}-setuptools \
+    && zypper clean -a
 
 # Install packages not available via Zypper.
 RUN python3 -m pip install --disable-pip-version-check --no-cache-dir -U \

@@ -29,7 +29,7 @@
 def pythonVersion = '3.6'
 
 // Define the distro that provides our repositories for the given Python version.
-def sleVersion = '15.3'
+def sleVersion = '15.2'
 
 // Disable pr-merge builds; node-image pipeline doesn't use the PR images at all.
 if (env.BRANCH_NAME ==~ ~"^PR-\\d+") {
@@ -42,6 +42,7 @@ if (env.BRANCH_NAME ==~ ~"^PR-\\d+") {
 def promotionToken = ~"(main|maint\\/.*)"
 def isStable = env.BRANCH_NAME ==~ promotionToken ? true : false
 pipeline {
+
     agent {
         label "metal-gcp-builder"
     }
@@ -94,29 +95,18 @@ pipeline {
                     if (isStable) {
                         /*
                         Publish these tags on stable:
-                            - Major.Minor-Distro-Hash-Timestamp    (e.g. 3.9-SLES15.3-dhckj3-20221017133121)
-                            - Major.Minor-Distro-Hash-Timestamp    (e.g. 3.9-SLES15.3-dhckj3)
-                            - Major.Minor-Distro                   (e.g. 3.9-SLES15.3)
-                            - Major.Minor-Hash-Timestamp           (e.g. 3.9-dhckj3-20221017133121)
-                            - Major.Minor-Hash                     (e.g. 3.9-dhckj3)
-                            - Major.Minor                          (e.g. 3.9)
+                            - Major.Minor                          (e.g. 3.6)
                         */
-                        publishCsmDockerImage(image: env.NAME, tag: "${pythonVersion}-SLES${sleVersion}-${env.VERSION}-${env.TIMESTAMP}", multiArch: env.MULTI_ARCH, isStable: isStable)
-                        publishCsmDockerImage(image: env.NAME, tag: "${pythonVersion}-SLES${sleVersion}-${env.VERSION}", multiArch: env.MULTI_ARCH, isStable: isStable)
-                        publishCsmDockerImage(image: env.NAME, tag: "${pythonVersion}-SLES${sleVersion}", multiArch: env.MULTI_ARCH, isStable: isStable)
-                        publishCsmDockerImage(image: env.NAME, tag: "${pythonVersion}-${env.VERSION}-${env.TIMESTAMP}", multiArch: env.MULTI_ARCH, isStable: isStable)
-                        publishCsmDockerImage(image: env.NAME, tag: "${pythonVersion}-${env.VERSION}", multiArch: env.MULTI_ARCH, isStable: isStable)
                         publishCsmDockerImage(image: env.NAME, tag: "${pythonVersion}", multiArch: env.MULTI_ARCH, isStable: isStable)
 
-                    } else {
-                        /*
-                        Publish these tags on unstable:
-                            - Major.Minor-Hash-Timestamp           (e.g. 3.9-dhckj3-20221017133121)
-                            - Major.Minor-Hash                     (e.g. 3.9-dhckj3)
-                        */
-                        publishCsmDockerImage(image: env.NAME, tag: "${pythonVersion}-${env.VERSION}-${env.TIMESTAMP}", multiArch: env.MULTI_ARCH, isStable: isStable)
-                        publishCsmDockerImage(image: env.NAME, tag: "${pythonVersion}-${env.VERSION}", multiArch: env.MULTI_ARCH, isStable: isStable)
                     }
+                    /*
+                    Publish these tags on unstable:
+                        - Major.Minor-Hash-Timestamp           (e.g. 3.6-dhckj3-20221017133121)
+                        - Major.Minor-Hash                     (e.g. 3.6-dhckj3)
+                    */
+                    publishCsmDockerImage(image: env.NAME, tag: "${pythonVersion}-${env.VERSION}-${env.TIMESTAMP}", multiArch: env.MULTI_ARCH, isStable: isStable)
+                    publishCsmDockerImage(image: env.NAME, tag: "${pythonVersion}-${env.VERSION}", multiArch: env.MULTI_ARCH, isStable: isStable)
                 }
             }
         }
