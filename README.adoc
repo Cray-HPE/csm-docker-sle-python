@@ -1,32 +1,58 @@
 = CSM Docker: SLE Python
+:toc:
+:toclevels: 3
 
 A SLE Server Python Docker image used for RPM builds.
 
-Available images can only be seen by querying the Docker API or
-https://artifactory.algol60.net/artifactory/csm-docker/stable/csm-docker-sle-python[visiting the registry itself].
+== Available Images
 
-== Building
+See a list of available Python Images with `git tag`, but in general there are:
 
-The provided `Makefile` adds Jenkins Pipeline variables to the `docker build` command. The commands below are for use outside of the CSM Jenkins Pipeline.
+.Stable Docker Tags
+[options="header",cols="m,1*^,m"]
+|===
+| Docker Tag | Base OS | GLIBC
+
+| 3.10
+| SLES-15-SP4
+| 2.31
+
+| 3.9
+| SLES-15-SP3
+| 2.31
+
+| 3.6
+| SLES-15-SP2
+| 2.26
+|===
+
+Tags can also be seen directly at https://artifactory.algol60.net/artifactory/csm-docker/stable/csm-docker-sle-python.
+
+== Usage
+
+The provided `Makefile` adds Jenkins Pipeline variables to the `docker build` command.
+The commands below are for use outside of the CSM Jenkins Pipeline.
 
 [source,bash]
 ----
 export DOCKER_BUILDKIT=1
 export SLES_REGISTRATION_CODE=<registration_code>
 
-# Build Python 3.10.8
-docker build --secret id=SLES_REGISTRATION_CODE --build-arg PY_VERSION=3.10 .
+make image
+
+docker run -it csm-docker-sle-python:3.10
 ----
 
-== Running
+=== Remote Usage
+
+To use the images built from Jenkins, use the full URL:
 
 [source,bash]
 ----
-# Python version (major.minor)
-docker run -it artifactory.algol60.net/csm-docker/stable/csm-docker-sle-python:3.10
+docker run -it artifactory.algol60.net/csm-docker/stable/csm-docker-sle-python:3.10 bash
 
-# Python version (major.minor.bugfix) and distro
-docker run -it artifactory.algol60.net/csm-docker/stable/csm-docker-sle-python:3.10-SLES15.4
+# Git Hash
+docker run -it artifactory.algol60.net/csm-docker/stable/csm-docker-sle-python:3.10-<hash> bash
 ----
 
 == Python Version(s)
@@ -35,18 +61,14 @@ The version is controlled by the `Jenkinsfile`.
 
 Unstable image tags will publish using these tags:
 
-* `[DISTRO]-[HASH]`
-* `[DISTRO]-[HASH]-[TIMESTAMP]`
+* `[MAJOR.MINOR]-[HASH]`
+* `[MAJOR.MINOR]-[HASH]-[TIMESTAMP]`
 
 Stable image tags will publish using these tags:
 
-.The `[MAJOR.MINOR]` image is only created against the latest distro.
 * `[MAJOR.MINOR]`
 * `[MAJOR.MINOR]-[HASH]`
 * `[MAJOR.MINOR]-[HASH]-[TIMESTAMP]`
-* `[MAJOR.MINOR]-[DISTRO]`
-* `[MAJOR.MINOR]-[DISTRO]-[HASH]`
-* `[MAJOR.MINOR]-[DISTRO]-[HASH]-[TIMESTAMP]`
 
 === Updating Python
 
