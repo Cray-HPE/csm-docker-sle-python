@@ -49,7 +49,9 @@ RUN zypper refresh \
 
 # Ensure python3 and pip3 point to our desired Python version.
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python${PY_VERSION} 1 \
-    && update-alternatives --install /usr/bin/pip3 pip3 /usr/bin/pip${PY_VERSION} 1
+    && update-alternatives --install /usr/bin/python python /usr/bin/python${PY_VERSION} 1 \
+    && update-alternatives --install /usr/bin/pip3 pip3 /usr/bin/pip${PY_VERSION} 1 \
+    && update-alternatives --install /usr/bin/pip pip /usr/bin/pip${PY_VERSION} 1
 
 # Install packages not available via Zypper.
 RUN python3 -m pip install --disable-pip-version-check --no-cache-dir -U \
