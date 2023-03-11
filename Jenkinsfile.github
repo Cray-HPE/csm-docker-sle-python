@@ -97,16 +97,15 @@ pipeline {
                         Publish these tags on stable:
                             - Major.Minor                          (e.g. 3.6)
                         */
-                        publishCsmDockerImage(image: env.NAME, tag: "${pythonVersion}", multiArch: env.MULTI_ARCH, isStable: isStable)
-
+                        publishCsmDockerImage(image: env.NAME, multiArch: env.MULTI_ARCH, isStable: isStable, tag: "${pythonVersion}")
                     }
                     /*
                     Publish these tags on unstable:
                         - Major.Minor-Hash-Timestamp           (e.g. 3.6-dhckj3-20221017133121)
                         - Major.Minor-Hash                     (e.g. 3.6-dhckj3)
                     */
-                    publishCsmDockerImage(image: env.NAME, tag: "${pythonVersion}-${env.VERSION}-${env.TIMESTAMP}", multiArch: env.MULTI_ARCH, isStable: isStable)
-                    publishCsmDockerImage(image: env.NAME, tag: "${pythonVersion}-${env.VERSION}", multiArch: env.MULTI_ARCH, isStable: isStable)
+                    publishCsmDockerImage(image: env.NAME, multiArch: env.MULTI_ARCH, isStable: isStable, tag: "${pythonVersion}-${env.VERSION}")
+                    publishCsmDockerImage(image: env.NAME, multiArch: env.MULTI_ARCH, isStable: isStable, tag: "${pythonVersion}-${env.VERSION}-${env.TIMESTAMP}")
                 }
             }
         }
