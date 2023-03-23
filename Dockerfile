@@ -57,6 +57,7 @@ RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python${PY_V
 RUN python3 -m pip install --disable-pip-version-check --no-cache-dir -U \
     'build' \
     'virtualenv' \
-    'wheel'
+    'wheel' \
+    'setuptools_scm'
 
 WORKDIR /build
