@@ -46,6 +46,7 @@ RUN zypper refresh \
 # Install packages not available via Zypper.
 RUN python3 -m pip install --disable-pip-version-check --no-cache-dir -U \
     'build' \
+    'setuptools_scm[toml]' \
     'virtualenv' \
     'wheel'
 
