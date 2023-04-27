@@ -49,7 +49,7 @@ pipeline {
 
     options {
         buildDiscarder(logRotator(numToKeepStr: "1"))
-        timeout(time: 20, unit: 'MINUTES')
+        timeout(time: 30, unit: 'MINUTES')
         disableConcurrentBuilds()
         timestamps()
     }
@@ -58,10 +58,14 @@ pipeline {
     triggers { cron('H 16 * * 0') }
 
     environment {
+        BUILD_ARGS = "--build-arg 'SLE_VERSION=${SLE_VERSION}' --build-arg 'PY_VERSION=${pythonVersion}' --secret id=SLES_REGISTRATION_CODE"
         DOCKER_ARGS = getDockerBuildArgs(name: getRepoName(), description: 'A build environment for Python.')
         DOCKER_BUILDKIT = 1
         MULTI_ARCH = 1
         NAME = getRepoName()
+        PY_VERSION = "${pythonVersion}"
+        SLE_VERSION = "${sleVersion}"
+        SLES_REGISTRATION_CODE = credentials('sles15-registration-code')
         TIMESTAMP = sh(returnStdout: true, script: "date '+%Y%m%d%H%M%S'").trim()
         VERSION = "${GIT_COMMIT[0..6]}"
     }
@@ -69,26 +73,13 @@ pipeline {
     stages {
 
         stage('Build') {
-            environment {
-                BUILD_ARGS = "--build-arg 'SLE_VERSION=${sleVersion}' --build-arg 'PY_VERSION=${pythonVersion}'"
-            }
 
             steps {
-                withCredentials([
-                        string(credentialsId: 'sles15-registration-code', variable: 'SLES_REGISTRATION_CODE')
-                ]) {
-                    sh "make image"
-                }
+                sh "make image"
             }
         }
 
         stage('Publish') {
-
-            environment {
-                SLES_REGISTRATION_CODE = credentials('sles15-registration-code')
-                BUILD_ARGS = "--cache-from type=local,src=docker-build-cache --build-arg 'SLE_VERSION=${sleVersion}' --build-arg 'PY_VERSION=${pythonVersion}' --secret id=SLES_REGISTRATION_CODE"
-            }
-
             steps {
                 script {
 
