@@ -32,7 +32,6 @@ ARG PY_VERSION=''
 # - python-devel      : Extensions and headers for building Python modules.
 # - python-pip        : The published/paired pip for the given Python base.
 # - python-setuptools : The published/paired setuptools for the given Python base.
-# NOTE: python36 is called python3 in SLE15.2.
 RUN zypper refresh \
     && zypper --non-interactive install --no-recommends --force-resolution \
     python-rpm-generators \

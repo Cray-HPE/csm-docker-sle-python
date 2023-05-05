@@ -58,14 +58,13 @@ pipeline {
     triggers { cron('H 16 * * 0') }
 
     environment {
-        BUILD_ARGS = "--build-arg 'SLE_VERSION=${SLE_VERSION}' --build-arg 'PY_VERSION=${pythonVersion}' --secret id=SLES_REGISTRATION_CODE"
+        BUILD_ARGS = "--build-arg 'SLE_VERSION=${sleVersion}' --build-arg 'PY_VERSION=${pythonVersion}'"
         DOCKER_ARGS = getDockerBuildArgs(name: getRepoName(), description: 'A build environment for Python.')
         DOCKER_BUILDKIT = 1
         MULTI_ARCH = 1
         NAME = getRepoName()
         PY_VERSION = "${pythonVersion}"
         SLE_VERSION = "${sleVersion}"
-        SLES_REGISTRATION_CODE = credentials('sles15-registration-code')
         TIMESTAMP = sh(returnStdout: true, script: "date '+%Y%m%d%H%M%S'").trim()
         VERSION = "${GIT_COMMIT[0..6]}"
     }
@@ -92,7 +91,7 @@ pipeline {
                         publishCsmDockerImage(image: env.NAME, multiArch: env.MULTI_ARCH, isStable: isStable, tag: "${pythonVersion}")
                     }
                     /*
-                    Publish these tags on unstable:
+                    Always publish these tags:
                         - Major.Minor-Hash-Timestamp           (e.g. 3.6-dhckj3-20221017133121)
                         - Major.Minor-Hash                     (e.g. 3.6-dhckj3)
                     */
