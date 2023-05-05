@@ -58,7 +58,7 @@ pipeline {
     triggers { cron('H 16 * * 0') }
 
     environment {
-        BUILD_ARGS = "--build-arg 'SLE_VERSION=${SLE_VERSION}' --build-arg 'PY_VERSION=${pythonVersion}' --secret id=SLES_REGISTRATION_CODE"
+        BUILD_ARGS = "--build-arg 'SLE_VERSION=${sleVersion}' --build-arg 'PY_VERSION=${pythonVersion}' --secret id=SLES_REGISTRATION_CODE"
         DOCKER_ARGS = getDockerBuildArgs(name: getRepoName(), description: 'A build environment for Python.')
         DOCKER_BUILDKIT = 1
         MULTI_ARCH = 1
