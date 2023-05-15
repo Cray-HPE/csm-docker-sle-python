@@ -13,6 +13,10 @@ See a list of available Python Images with `git tag`, but in general there are:
 |===
 | Docker Tag | Base OS | GLIBC
 
+| 3.11
+| SLES-15-SP5
+| 2.31
+
 | 3.10
 | SLES-15-SP4
 | 2.31

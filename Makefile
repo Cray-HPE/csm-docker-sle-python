@@ -27,16 +27,16 @@ ifeq ($(DOCKER_BUILDKIT),)
 export DOCKER_BUILDKIT ?= 1
 endif
 
-ifeq ($(BUILD_ARGS),)
-export BUILD_ARGS ?= "--build-arg 'SLE_VERSION=${SLE_VERSION}' --build-arg 'PY_VERSION=${pythonVersion}' --secret id=SLES_REGISTRATION_CODE"
-endif
-
 ifeq ($(SLE_VERSION),)
 export SLE_VERSION := $(shell awk -v replace="'" '/sleVersion/{gsub(replace,"", $$NF); print $$NF; exit}' Jenkinsfile.github)
 endif
 
 ifeq ($(PY_VERSION),)
 export PY_VERSION := $(shell awk -v replace="'" '/pythonVersion/{gsub(replace,"", $$NF); print $$NF; exit}' Jenkinsfile.github)
+endif
+
+ifeq ($(BUILD_ARGS),)
+export BUILD_ARGS ?= "--build-arg 'SLE_VERSION=${SLE_VERSION}' --build-arg 'PY_VERSION=${PY_VERSION}' --secret id=SLES_REGISTRATION_CODE_amd64 --secret id=SLES_REGISTRATION_CODE_arm64"
 endif
 
 ifeq ($(TIMESTAMP),)
@@ -65,7 +65,6 @@ image: print
         --cache-to type=local,dest=docker-build-cache  \
         --platform linux/amd64,linux/arm64 \
         --builder $$(docker buildx create --platform linux/amd64,linux/arm64) \
-        --secret id=SLES_REGISTRATION_CODE \
         --pull \
         .
 
@@ -76,7 +75,6 @@ image: print
         ${DOCKER_ARGS} \
         --cache-from type=local,src=docker-build-cache \
         --platform linux/amd64 \
-        --secret id=SLES_REGISTRATION_CODE \
         --pull \
         --load \
         -t '${NAME}:${PY_VERSION}' \

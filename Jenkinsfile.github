@@ -1,35 +1,35 @@
 /*
- *
- *  MIT License
- *
- *  (C) Copyright 2022-2023 Hewlett Packard Enterprise Development LP
- *
- *  Permission is hereby granted, free of charge, to any person obtaining a
- *  copy of this software and associated documentation files (the "Software"),
- *  to deal in the Software without restriction, including without limitation
- *  the rights to use, copy, modify, merge, publish, distribute, sublicense,
- *  and/or sell copies of the Software, and to permit persons to whom the
- *  Software is furnished to do so, subject to the following conditions:
- *
- *  The above copyright notice and this permission notice shall be included
- *  in all copies or substantial portions of the Software.
- *
- *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
- *  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
- *  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
- *  ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
- *  OTHER DEALINGS IN THE SOFTWARE.
- *
+
+ MIT License
+
+ (C) Copyright 2023 Hewlett Packard Enterprise Development LP
+
+ Permission is hereby granted, free of charge, to any person obtaining a
+ copy of this software and associated documentation files (the "Software"),
+ to deal in the Software without restriction, including without limitation
+ the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ and/or sell copies of the Software, and to permit persons to whom the
+ Software is furnished to do so, subject to the following conditions:
+
+ The above copyright notice and this permission notice shall be included
+ in all copies or substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+ THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ OTHER DEALINGS IN THE SOFTWARE.
+
  */
 @Library('csm-shared-library@main') _
 
 // The Python version available from the SUSE repositories, with the period.
-def pythonVersion = '3.10'
+def pythonVersion = '3.11'
 
 // Define the distro that provides our repositories for the given Python version.
-def sleVersion = '15.4'
+def sleVersion = '15.5'
 
 // Disable pr-merge builds; node-image pipeline doesn't use the PR images at all.
 if (env.BRANCH_NAME ==~ ~"^PR-\\d+") {
@@ -39,7 +39,7 @@ if (env.BRANCH_NAME ==~ ~"^PR-\\d+") {
 }
 
 // Only main or maint/* branches are stable.
-def promotionToken = ~"(main|maint\\/.*)"
+def promotionToken = ~"(main|maint\\/.*|beta\\/.*)"
 def isStable = env.BRANCH_NAME ==~ promotionToken ? true : false
 pipeline {
 
@@ -58,14 +58,15 @@ pipeline {
     triggers { cron('H 16 * * 0') }
 
     environment {
-        BUILD_ARGS = "--build-arg 'SLE_VERSION=${SLE_VERSION}' --build-arg 'PY_VERSION=${pythonVersion}' --secret id=SLES_REGISTRATION_CODE"
+        BUILD_ARGS = "--build-arg 'SLE_VERSION=${sleVersion}' --build-arg 'PY_VERSION=${pythonVersion}' --secret id=SLES_REGISTRATION_CODE_amd64 --secret id=SLES_REGISTRATION_CODE_arm64"
         DOCKER_ARGS = getDockerBuildArgs(name: getRepoName(), description: 'A build environment for Python.')
         DOCKER_BUILDKIT = 1
         MULTI_ARCH = 1
         NAME = getRepoName()
         PY_VERSION = "${pythonVersion}"
         SLE_VERSION = "${sleVersion}"
-        SLES_REGISTRATION_CODE = credentials('sles15-registration-code')
+        SLES_REGISTRATION_CODE_amd64 = credentials('sles-beta-registration-code-x86_64')
+        SLES_REGISTRATION_CODE_arm64 = credentials('sles-beta-registration-code-aarch64')
         TIMESTAMP = sh(returnStdout: true, script: "date '+%Y%m%d%H%M%S'").trim()
         VERSION = "${GIT_COMMIT[0..6]}"
     }
@@ -73,7 +74,6 @@ pipeline {
     stages {
 
         stage('Build') {
-
             steps {
                 sh "make image"
             }
@@ -87,14 +87,14 @@ pipeline {
                     if (isStable) {
                         /*
                         Publish these tags on stable:
-                            - Major.Minor                          (e.g. 3.10)
+                            - Major.Minor                          (e.g. 3.11)
                         */
                         publishCsmDockerImage(image: env.NAME, multiArch: env.MULTI_ARCH, isStable: isStable, tag: "${pythonVersion}")
                     }
                     /*
                     Always publish these tags:
-                        - Major.Minor-Hash-Timestamp           (e.g. 3.10-dhckj3-20221017133121)
-                        - Major.Minor-Hash                     (e.g. 3.10-dhckj3)
+                        - Major.Minor-Hash-Timestamp           (e.g. 3.11-dhckj3-20221017133121)
+                        - Major.Minor-Hash                     (e.g. 3.11-dhckj3)
                     */
                     publishCsmDockerImage(image: env.NAME, multiArch: env.MULTI_ARCH, isStable: isStable, tag: "${pythonVersion}-${env.VERSION}")
                     publishCsmDockerImage(image: env.NAME, multiArch: env.MULTI_ARCH, isStable: isStable, tag: "${pythonVersion}-${env.VERSION}-${env.TIMESTAMP}")
