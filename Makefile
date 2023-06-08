@@ -77,6 +77,7 @@ image: print
         --platform linux/amd64 \
         --pull \
         --load \
+        -t '${NAME}:latest' \
         -t '${NAME}:${PY_VERSION}' \
         -t '${NAME}:${PY_VERSION}-${VERSION}-${TIMESTAMP}' \
         -t '${NAME}:${PY_VERSION}-${VERSION}' \
