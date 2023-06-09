@@ -90,6 +90,7 @@ pipeline {
                             - Major.Minor                          (e.g. 3.10)
                         */
                         publishCsmDockerImage(image: env.NAME, multiArch: env.MULTI_ARCH, isStable: isStable, tag: "${pythonVersion}")
+                        publishCsmDockerImage(image: env.NAME, multiArch: env.MULTI_ARCH, isStable: isStable, tag: "latest")
                     }
                     /*
                     Always publish these tags:
