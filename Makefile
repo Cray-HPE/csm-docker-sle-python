@@ -36,7 +36,20 @@ export PY_VERSION := $(shell awk -v replace="'" '/pythonVersion/{gsub(replace,""
 endif
 
 ifeq ($(BUILD_ARGS),)
-export BUILD_ARGS ?= "--build-arg 'SLE_VERSION=${SLE_VERSION}' --build-arg 'PY_VERSION=${PY_VERSION}' --secret id=SLES_REGISTRATION_CODE_amd64 --secret id=SLES_REGISTRATION_CODE_arm64"
+export BUILD_ARGS ?= "--build-arg 'SLE_VERSION=${SLE_VERSION}' --build-arg 'PY_VERSION=${PY_VERSION}'"
+endif
+
+# GA releases use the same key for arm64 and amd64.
+ifneq ($(SLES_REGISTRATION_CODE),)
+BUILD_ARGS += --secret id=SLES_REGISTRATION_CODE
+endif
+
+# Beta releases use unique keys for each architecture.
+ifneq ($(SLES_REGISTRATION_CODE_amd64),)
+BUILD_ARGS += --secret id=SLES_REGISTRATION_CODE_amd64
+endif
+ifneq ($(SLES_REGISTRATION_CODE_arm64),)
+BUILD_ARGS += --secret id=SLES_REGISTRATION_CODE_arm64
 endif
 
 ifeq ($(TIMESTAMP),)
