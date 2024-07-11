@@ -64,7 +64,7 @@ image: print
         ${DOCKER_ARGS} \
         --cache-to type=local,dest=docker-build-cache  \
         --platform linux/amd64,linux/arm64 \
-        --builder $$(docker buildx create --platform linux/amd64,linux/arm64) \
+        --builder $$(docker buildx create --platform linux/amd64,linux/arm64 --name ${PY_VERSION}-SLES${SLE_VERSION}-${VERSION}-${TIMESTAMP}) \
         --pull \
         .
 
@@ -74,6 +74,7 @@ image: print
         ${BUILD_ARGS} \
         ${DOCKER_ARGS} \
         --cache-from type=local,src=docker-build-cache \
+        --builder ${PY_VERSION}-SLES${SLE_VERSION}-${VERSION}-${TIMESTAMP} \
         --platform linux/amd64 \
         --pull \
         --load \
