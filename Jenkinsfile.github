@@ -29,7 +29,7 @@
 def pythonVersion = '3.9'
 
 // Define the distro that provides our repositories for the given Python version.
-def sleVersion = '15.3'
+def mainSleVersion = '15.3'
 
 // Disable pr-merge builds; node-image pipeline doesn't use the PR images at all.
 if (env.BRANCH_NAME ==~ ~"^PR-\\d+") {
@@ -41,6 +41,7 @@ if (env.BRANCH_NAME ==~ ~"^PR-\\d+") {
 // Only main or maint/* branches are stable.
 def promotionToken = ~"(main|maint\\/.*)"
 def isStable = env.BRANCH_NAME ==~ promotionToken ? true : false
+
 pipeline {
 
     agent {
@@ -58,13 +59,13 @@ pipeline {
     triggers { cron('H 16 * * 0') }
 
     environment {
-        BUILD_ARGS = "--build-arg 'SLE_VERSION=${sleVersion}' --build-arg 'PY_VERSION=${pythonVersion}' --secret id=SLES_REGISTRATION_CODE"
+        BUILD_ARGS = "--build-arg 'SLE_VERSION=${mainSleVersion}' --build-arg 'PY_VERSION=${pythonVersion}' --secret id=SLES_REGISTRATION_CODE"
         DOCKER_ARGS = getDockerBuildArgs(name: getRepoName(), description: 'A build environment for Python.')
         DOCKER_BUILDKIT = 1
         MULTI_ARCH = 1
         NAME = getRepoName()
         PY_VERSION = "${pythonVersion}"
-        SLE_VERSION = "${sleVersion}"
+        SLE_VERSION = "${mainSleVersion}"
         SLES_REGISTRATION_CODE = credentials('sles15-registration-code')
         TIMESTAMP = sh(returnStdout: true, script: "date '+%Y%m%d%H%M%S'").trim()
         VERSION = "${GIT_COMMIT[0..6]}"
@@ -82,22 +83,28 @@ pipeline {
         stage('Publish') {
             steps {
                 script {
-
                     // Only overwrite an image if this is a stable build.
                     if (isStable) {
                         /*
                         Publish these tags on stable:
-                            - Major.Minor                          (e.g. 3.9)
+                            - Major.Minor                   (e.g. 3.9-SLES15.3)
+                            - Major.Minor                   (e.g. 3.9)
                         */
-                        publishCsmDockerImage(image: env.NAME, multiArch: env.MULTI_ARCH, isStable: isStable, tag: "${pythonVersion}")
+                        publishCsmDockerImage(image: env.NAME, multiArch: env.MULTI_ARCH, isStable: isStable, tag: "${pythonVersion}-SLES${SLE_VERSION}")
+                        // Only publish the simple version images on the latest/newest base image.
+                        if ("${SLE_VERSION}" == "${mainSleVersion}" && env.BRANCH_NAME == 'main') {
+                            publishCsmDockerImage(image: env.NAME, multiArch: env.MULTI_ARCH, isStable: isStable, tag: "${pythonVersion}")
+                            publishCsmDockerImage(image: env.NAME, multiArch: env.MULTI_ARCH, isStable: isStable, tag: "latest")
+                        }
+                    } else {
+                        /*
+                        Publish these tags on unstable:
+                            - Hash-Timestamp                (e.g. 3.9-SLES15.3-dhckj3-20221017133121)
+                            - Hash                          (e.g. 3.9-SLES15.3-dhckj3)
+                        */
+                        publishCsmDockerImage(image: env.NAME, multiArch: env.MULTI_ARCH, isStable: isStable, tag: "${pythonVersion}-SLES${SLE_VERSION}-${env.VERSION}")
+                        publishCsmDockerImage(image: env.NAME, multiArch: env.MULTI_ARCH, isStable: isStable, tag: "${pythonVersion}-SLES${SLE_VERSION}-${env.VERSION}-${env.TIMESTAMP}")
                     }
-                    /*
-                    Always publish these tags:
-                        - Major.Minor-Hash-Timestamp           (e.g. 3.9-dhckj3-20221017133121)
-                        - Major.Minor-Hash                     (e.g. 3.9-dhckj3)
-                    */
-                    publishCsmDockerImage(image: env.NAME, multiArch: env.MULTI_ARCH, isStable: isStable, tag: "${pythonVersion}-${env.VERSION}")
-                    publishCsmDockerImage(image: env.NAME, multiArch: env.MULTI_ARCH, isStable: isStable, tag: "${pythonVersion}-${env.VERSION}-${env.TIMESTAMP}")
                 }
             }
         }
