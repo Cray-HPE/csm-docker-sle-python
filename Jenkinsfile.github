@@ -97,11 +97,11 @@ pipeline {
                                         - Major.Minor                   (e.g. 3.11-SLES15.5)
                                         - Major.Minor                   (e.g. 3.11)
                                     */
-                                    publishCsmDockerImage(image: env.NAME, multiArch: env.MULTI_ARCH, isStable: isStable, tag: "${pythonVersion}-SLES${SLE_VERSION}")
+                                    publishCsmDockerImage(image: env.NAME, push: false, isStable: isStable, tag: "${pythonVersion}-SLES${SLE_VERSION}")
                                     // Only publish the simple version images on the latest/newest base image.
                                     if ("${SLE_VERSION}" == "${mainSleVersion}" && env.BRANCH_NAME == 'main') {
-                                        publishCsmDockerImage(image: env.NAME, multiArch: env.MULTI_ARCH, isStable: isStable, tag: "${pythonVersion}")
-                                        publishCsmDockerImage(image: env.NAME, multiArch: env.MULTI_ARCH, isStable: isStable, tag: "latest")
+                                        publishCsmDockerImage(image: env.NAME, push: false, isStable: isStable, tag: "${pythonVersion}")
+                                        publishCsmDockerImage(image: env.NAME, push: false, isStable: isStable, tag: "latest")
                                     }
                                 } else {
                                     /*
@@ -109,8 +109,8 @@ pipeline {
                                         - Hash-Timestamp                (e.g. 3.11-SLES15.5-dhckj3-20221017133121)
                                         - Hash                          (e.g. 3.11-SLES15.5-dhckj3)
                                     */
-                                    publishCsmDockerImage(image: env.NAME, multiArch: env.MULTI_ARCH, isStable: isStable, tag: "${pythonVersion}-SLES${SLE_VERSION}-${env.VERSION}")
-                                    publishCsmDockerImage(image: env.NAME, multiArch: env.MULTI_ARCH, isStable: isStable, tag: "${pythonVersion}-SLES${SLE_VERSION}-${env.VERSION}-${env.TIMESTAMP}")
+                                    publishCsmDockerImage(image: env.NAME, push: false, isStable: isStable, tag: "${pythonVersion}-SLES${SLE_VERSION}-${env.VERSION}")
+                                    publishCsmDockerImage(image: env.NAME, push: false, isStable: isStable, tag: "${pythonVersion}-SLES${SLE_VERSION}-${env.VERSION}-${env.TIMESTAMP}")
                                 }
                             }
                         }
