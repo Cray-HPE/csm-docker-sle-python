@@ -62,14 +62,8 @@ image: print
 	docker buildx build \
         ${BUILD_ARGS} \
         ${DOCKER_ARGS} \
-        --cache-to type=local,dest=docker-build-cache  \
         --platform linux/amd64,linux/arm64 \
         --builder $$(docker buildx create --platform linux/amd64,linux/arm64 --name 'SLES${SLE_VERSION}-${PY_VERSION}-${VERSION}-${TIMESTAMP}') \
         --pull \
         --push \
-        -t '${NAME}:latest' \
-        -t '${NAME}:${PY_VERSION}' \
-        -t '${NAME}:${PY_VERSION}-SLES${SLE_VERSION}' \
-        -t '${NAME}:${PY_VERSION}-SLES${SLE_VERSION}-${VERSION}' \
-        -t '${NAME}:${PY_VERSION}-SLES${SLE_VERSION}-${VERSION}-${TIMESTAMP}' \
         .
