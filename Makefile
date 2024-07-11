@@ -68,6 +68,8 @@ image: print
         --pull \
         .
 
+	docker buildx create --use
+
 	docker buildx build \
         ${BUILD_ARGS} \
         ${DOCKER_ARGS} \
