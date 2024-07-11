@@ -69,14 +69,13 @@ The version is controlled by the `Jenkinsfile`.
 
 Unstable image tags will publish using these tags:
 
-* `[MAJOR.MINOR]-[HASH]`
-* `[MAJOR.MINOR]-[HASH]-[TIMESTAMP]`
+* `[MAJOR.MINOR]-SLES[SLE_VERSION]-[HASH]`
+* `[MAJOR.MINOR]-SLES[SLE_VERSION]-[HASH]-[TIMESTAMP]`
 
 Stable image tags will publish using these tags:
 
 * `[MAJOR.MINOR]`
-* `[MAJOR.MINOR]-[HASH]`
-* `[MAJOR.MINOR]-[HASH]-[TIMESTAMP]`
+* `[MAJOR.MINOR]-SLES[SLE_VERSION]`
 
 === Updating Python
 
