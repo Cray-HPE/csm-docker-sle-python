@@ -1,5 +1,4 @@
 /*
- *
  *  MIT License
  *
  *  (C) Copyright 2022-2024 Hewlett Packard Enterprise Development LP
@@ -22,14 +21,15 @@
  *  ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  *  OTHER DEALINGS IN THE SOFTWARE.
  *
- */
+*/
+
 @Library('csm-shared-library@main') _
 
 // The Python version available from the SUSE repositories, with the period.
-def pythonVersion = '3.10'
+def pythonVersion = '3.11'
 
 // Define the distro that provides our repositories for the given Python version.
-def sleVersion = '15.4'
+def mainSleVersion = '15.6'
 
 // Disable pr-merge builds; node-image pipeline doesn't use the PR images at all.
 if (env.BRANCH_NAME ==~ ~"^PR-\\d+") {
@@ -41,8 +41,8 @@ if (env.BRANCH_NAME ==~ ~"^PR-\\d+") {
 // Only main or maint/* branches are stable.
 def promotionToken = ~"(main|maint\\/.*)"
 def isStable = env.BRANCH_NAME ==~ promotionToken ? true : false
-pipeline {
 
+pipeline {
     agent {
         label "metal-gcp-builder"
     }
@@ -58,47 +58,63 @@ pipeline {
     triggers { cron('H 16 * * 0') }
 
     environment {
-        BUILD_ARGS = "--build-arg 'SLE_VERSION=${sleVersion}' --build-arg 'PY_VERSION=${pythonVersion}' --secret id=SLES_REGISTRATION_CODE"
         DOCKER_ARGS = getDockerBuildArgs(name: getRepoName(), description: 'A build environment for Python.')
         DOCKER_BUILDKIT = 1
         MULTI_ARCH = 1
         NAME = getRepoName()
         PY_VERSION = "${pythonVersion}"
-        SLE_VERSION = "${sleVersion}"
         SLES_REGISTRATION_CODE = credentials('sles15-registration-code')
         TIMESTAMP = sh(returnStdout: true, script: "date '+%Y%m%d%H%M%S'").trim()
         VERSION = "${GIT_COMMIT[0..6]}"
     }
 
     stages {
-
-        stage('Build') {
-
-            steps {
-                sh "make image"
-            }
-        }
-
-        stage('Publish') {
-            steps {
-                script {
-
-                    // Only overwrite an image if this is a stable build.
-                    if (isStable) {
-                        /*
-                        Publish these tags on stable:
-                            - Major.Minor                          (e.g. 3.10)
-                        */
-                        publishCsmDockerImage(image: env.NAME, multiArch: env.MULTI_ARCH, isStable: isStable, tag: "${pythonVersion}")
-                        publishCsmDockerImage(image: env.NAME, multiArch: env.MULTI_ARCH, isStable: isStable, tag: "latest")
+        stage('Build and Publish') {
+            matrix {
+                axes {
+                    axis {
+                        name 'SLE_VERSION'
+                        values '15.5', '15.6'
                     }
-                    /*
-                    Always publish these tags:
-                        - Major.Minor-Hash-Timestamp           (e.g. 3.10-dhckj3-20221017133121)
-                        - Major.Minor-Hash                     (e.g. 3.10-dhckj3)
-                    */
-                    publishCsmDockerImage(image: env.NAME, multiArch: env.MULTI_ARCH, isStable: isStable, tag: "${pythonVersion}-${env.VERSION}")
-                    publishCsmDockerImage(image: env.NAME, multiArch: env.MULTI_ARCH, isStable: isStable, tag: "${pythonVersion}-${env.VERSION}-${env.TIMESTAMP}")
+                }
+                stages {
+                    stage('Build') {
+                        steps {
+                            script {
+                                env.BUILD_ARGS = "--build-arg SLE_VERSION=${SLE_VERSION} --build-arg PY_VERSION=${PY_VERSION} --secret id=SLES_REGISTRATION_CODE"
+                                sh "make image"
+                            }
+                        }
+                    }
+                    stage('Publish') {
+                        steps {
+                            script {
+
+                                // Only overwrite an image if this is a stable build.
+                                if (isStable) {
+                                    /*
+                                    Publish these tags on stable:
+                                        - Major.Minor                   (e.g. 3.11-SLES15.5)
+                                        - Major.Minor                   (e.g. 3.11)
+                                    */
+                                    publishCsmDockerImage(image: env.NAME, multiArch: env.MULTI_ARCH, isStable: isStable, tag: "${pythonVersion}-SLES${SLE_VERSION}")
+                                    // Only publish the simple version images on the latest/newest base image.
+                                    if ("${SLE_VERSION}" == "${mainSleVersion}" && env.BRANCH_NAME == 'main') {
+                                        publishCsmDockerImage(image: env.NAME, multiArch: env.MULTI_ARCH, isStable: isStable, tag: "${pythonVersion}")
+                                        publishCsmDockerImage(image: env.NAME, multiArch: env.MULTI_ARCH, isStable: isStable, tag: "latest")
+                                    }
+                                } else {
+                                    /*
+                                    Publish these tags on unstable:
+                                        - Hash-Timestamp                (e.g. 3.11-SLES15.5-dhckj3-20221017133121)
+                                        - Hash                          (e.g. 3.11-SLES15.5-dhckj3)
+                                    */
+                                    publishCsmDockerImage(image: env.NAME, multiArch: env.MULTI_ARCH, isStable: isStable, tag: "${pythonVersion}-SLES${SLE_VERSION}-${env.VERSION}")
+                                    publishCsmDockerImage(image: env.NAME, multiArch: env.MULTI_ARCH, isStable: isStable, tag: "${pythonVersion}-SLES${SLE_VERSION}-${env.VERSION}-${env.TIMESTAMP}")
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

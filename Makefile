@@ -1,6 +1,6 @@
 # MIT License
 #
-# (C) Copyright 2022-2023 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2022-2024 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -79,6 +79,7 @@ image: print
         --load \
         -t '${NAME}:latest' \
         -t '${NAME}:${PY_VERSION}' \
-        -t '${NAME}:${PY_VERSION}-${VERSION}-${TIMESTAMP}' \
-        -t '${NAME}:${PY_VERSION}-${VERSION}' \
+        -t '${NAME}:${PY_VERSION}-SLES${SLE_VERSION}' \
+        -t '${NAME}:${PY_VERSION}-SLES${SLE_VERSION}-${VERSION}' \
+        -t '${NAME}:${PY_VERSION}-SLES${SLE_VERSION}-${VERSION}-${TIMESTAMP}' \
         .

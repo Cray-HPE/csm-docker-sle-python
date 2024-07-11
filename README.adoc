@@ -13,6 +13,14 @@ See a list of available Python Images with `git tag`, but in general there are:
 |===
 | Docker Tag | Base OS | GLIBC
 
+| 3.11
+| SLES-15-SP6
+| 2.38
+
+| 3.11
+| SLES-15-SP5
+| 2.31
+
 | 3.10
 | SLES-15-SP4
 | 2.31
@@ -40,7 +48,7 @@ export SLES_REGISTRATION_CODE=<registration_code>
 
 make image
 
-docker run -it csm-docker-sle-python:3.10
+docker run -it csm-docker-sle-python:3.11
 ----
 
 === Remote Usage
@@ -49,10 +57,10 @@ To use the images built from Jenkins, use the full URL:
 
 [source,bash]
 ----
-docker run -it artifactory.algol60.net/csm-docker/stable/csm-docker-sle-python:3.10 bash
+docker run -it artifactory.algol60.net/csm-docker/stable/csm-docker-sle-python:3.11 bash
 
 # Git Hash
-docker run -it artifactory.algol60.net/csm-docker/stable/csm-docker-sle-python:3.10-<hash> bash
+docker run -it artifactory.algol60.net/csm-docker/stable/csm-docker-sle-python:3.11-<hash> bash
 ----
 
 == Python Version(s)
@@ -72,4 +80,4 @@ Stable image tags will publish using these tags:
 
 === Updating Python
 
-To use a newer version of GoLang, update the `Jenkinsfile` with a new `pythonVersion`.
+To use a newer version of Python, update the `Jenkinsfile` with a new `pythonVersion`.
