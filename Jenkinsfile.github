@@ -80,6 +80,10 @@ pipeline {
                         values '15.5', '15.6'
                     }
                 }
+                environment {
+                    BUILD_CACHE = "SLES${SLE_VERSION}-${pythonVersion}-cache"
+                    BUILD_ARGS = "--build-arg SLE_VERSION=${SLE_VERSION} --build-arg PY_VERSION=${PY_VERSION} --secret id=SLES_REGISTRATION_CODE"
+                }
                 stages {
                     stage('Docker setup') {
                         steps {
@@ -100,17 +104,16 @@ pipeline {
                     stage('Build') {
                         steps {
                             script {
-                                env.BUILD_CACHE = "SLES${SLE_VERSION}-${pythonVersion}-cache"
-                                env.BUILD_ARGS = "--build-arg SLE_VERSION=${SLE_VERSION} --build-arg PY_VERSION=${PY_VERSION} --secret id=SLES_REGISTRATION_CODE"
                                 sh "make image"
                             }
                         }
                     }
                     stage('Publish') {
+                        environment {
+                            DOCKER_BUILDX_ARGS = "${BUILD_ARGS} --platform linux/amd64,linux/arm64 --cache-from type=local,src=${BUILD_CACHE} --builder ${BUILD_CACHE}"
+                        }
                         steps {
                             script {
-                                env.BUILD_CACHE = "SLES${SLE_VERSION}-${pythonVersion}-cache"
-                                env.DOCKER_BUILDX_ARGS = "${BUILD_ARGS} --platform linux/amd64,linux/arm64 --cache-from type=local,src=${env.BUILD_CACHE} --builder ${env.BUILD_CACHE}"
                                 // Only overwrite an image if this is a stable build.
                                 if (isStable) {
                                     /*
