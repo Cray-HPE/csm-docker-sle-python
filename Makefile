@@ -47,6 +47,10 @@ ifeq ($(VERSION),)
 export VERSION ?= $(shell git rev-parse --short HEAD)
 endif
 
+ifeq ($(BUILD_CACHE),)
+export BUILD_CACHE ?= 'docker-build-cache'
+endif
+
 all: image
 
 .PHONY: print
@@ -60,26 +64,10 @@ print:
 
 image: print
 	docker buildx build \
-        ${BUILD_ARGS} \
-        ${DOCKER_ARGS} \
-        --cache-to type=local,dest=docker-build-cache  \
+        $(BUILD_ARGS) \
+        $(DOCKER_ARGS) \
+        --cache-to type=local,dest=$(BUILD_CACHE) \
         --platform linux/amd64,linux/arm64 \
-        --builder $$(docker buildx create --platform linux/amd64,linux/arm64) \
+        --builder $$(docker buildx create --driver docker-container --platform linux/amd64,linux/arm64 --name $(BUILD_CACHE)) \
         --pull \
-        .
-
-	docker buildx create --use
-
-	docker buildx build \
-        ${BUILD_ARGS} \
-        ${DOCKER_ARGS} \
-        --cache-from type=local,src=docker-build-cache \
-        --platform linux/amd64 \
-        --pull \
-        --load \
-        -t '${NAME}:latest' \
-        -t '${NAME}:${PY_VERSION}' \
-        -t '${NAME}:${PY_VERSION}-SLES${SLE_VERSION}' \
-        -t '${NAME}:${PY_VERSION}-SLES${SLE_VERSION}-${VERSION}' \
-        -t '${NAME}:${PY_VERSION}-SLES${SLE_VERSION}-${VERSION}-${TIMESTAMP}' \
         .
