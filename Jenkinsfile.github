@@ -95,8 +95,8 @@ pipeline {
                                     )
                             ]) {
                                 script {
-                                    sh "docker login ${docker_registry}/stable --username \$DOCKER_USER --password \$DOCKER_TOKEN"
-                                    sh "docker login ${docker_registry}/unstable --username \$DOCKER_USER --password \$DOCKER_TOKEN"
+                                    sh "docker login ${docker_registry} --username \$DOCKER_USER --password \$DOCKER_TOKEN"
+                                    // sh "docker login ${docker_registry}/unstable --username \$DOCKER_USER --password \$DOCKER_TOKEN"
                                 }
                             }
                         }
