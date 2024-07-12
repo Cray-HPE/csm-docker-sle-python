@@ -25,6 +25,9 @@
 
 @Library('csm-shared-library@main') _
 
+// Docker registry to push to
+def docker_registry = 'artifactory.algol60.net/csm-docker'
+
 // The Python version available from the SUSE repositories, with the period.
 def pythonVersion = '3.11'
 
@@ -77,19 +80,39 @@ pipeline {
                         values '15.5', '15.6'
                     }
                 }
+                environment {
+                    BUILD_CACHE = "SLES${SLE_VERSION}-${pythonVersion}-cache"
+                    BUILD_ARGS = "--build-arg SLE_VERSION=${SLE_VERSION} --build-arg PY_VERSION=${PY_VERSION} --secret id=SLES_REGISTRATION_CODE"
+                }
                 stages {
+                    stage('Docker setup') {
+                        steps {
+                            withCredentials([
+                                    usernamePassword(
+                                            credentialsId: 'artifactory-algol60-publish',
+                                            usernameVariable: 'DOCKER_USER',
+                                            passwordVariable: 'DOCKER_TOKEN'
+                                    )
+                            ]) {
+                                script {
+                                    sh "docker login ${docker_registry} --username \$DOCKER_USER --password \$DOCKER_TOKEN"
+                                }
+                            }
+                        }
+                    }
                     stage('Build') {
                         steps {
                             script {
-                                env.BUILD_ARGS = "--build-arg SLE_VERSION=${SLE_VERSION} --build-arg PY_VERSION=${PY_VERSION} --secret id=SLES_REGISTRATION_CODE"
                                 sh "make image"
                             }
                         }
                     }
                     stage('Publish') {
+                        environment {
+                            DOCKER_BUILDX_ARGS = "${BUILD_ARGS} --platform linux/amd64,linux/arm64 --cache-from type=local,src=${BUILD_CACHE} --builder ${BUILD_CACHE}"
+                        }
                         steps {
                             script {
-
                                 // Only overwrite an image if this is a stable build.
                                 if (isStable) {
                                     /*
@@ -97,11 +120,18 @@ pipeline {
                                         - Major.Minor                   (e.g. 3.11-SLES15.5)
                                         - Major.Minor                   (e.g. 3.11)
                                     */
-                                    publishCsmDockerImage(image: env.NAME, multiArch: env.MULTI_ARCH, isStable: isStable, tag: "${pythonVersion}-SLES${SLE_VERSION}")
+                                    def stream = "${docker_registry}/stable/${env.NAME}"
+
+                                    sh "docker buildx build --push ${DOCKER_BUILDX_ARGS} --tag \"${stream}:${pythonVersion}-SLES${SLE_VERSION}\" ."
+                                    publishCsmDockerImage(image: env.NAME, push: false, isStable: isStable, tag: "${pythonVersion}-SLES${SLE_VERSION}")
+
                                     // Only publish the simple version images on the latest/newest base image.
                                     if ("${SLE_VERSION}" == "${mainSleVersion}" && env.BRANCH_NAME == 'main') {
-                                        publishCsmDockerImage(image: env.NAME, multiArch: env.MULTI_ARCH, isStable: isStable, tag: "${pythonVersion}")
-                                        publishCsmDockerImage(image: env.NAME, multiArch: env.MULTI_ARCH, isStable: isStable, tag: "latest")
+                                        sh "docker buildx build --push ${DOCKER_BUILDX_ARGS} --tag \"${stream}:${pythonVersion}\" ."
+                                        publishCsmDockerImage(image: env.NAME, push: false, isStable: isStable, tag: "${pythonVersion}")
+
+                                        sh "docker buildx build --push ${DOCKER_BUILDX_ARGS} --tag \"${stream}:latest\" ."
+                                        publishCsmDockerImage(image: env.NAME, push: false, isStable: isStable, tag: "latest")
                                     }
                                 } else {
                                     /*
@@ -109,8 +139,13 @@ pipeline {
                                         - Hash-Timestamp                (e.g. 3.11-SLES15.5-dhckj3-20221017133121)
                                         - Hash                          (e.g. 3.11-SLES15.5-dhckj3)
                                     */
-                                    publishCsmDockerImage(image: env.NAME, multiArch: env.MULTI_ARCH, isStable: isStable, tag: "${pythonVersion}-SLES${SLE_VERSION}-${env.VERSION}")
-                                    publishCsmDockerImage(image: env.NAME, multiArch: env.MULTI_ARCH, isStable: isStable, tag: "${pythonVersion}-SLES${SLE_VERSION}-${env.VERSION}-${env.TIMESTAMP}")
+                                    def stream = "${docker_registry}/unstable/${env.NAME}"
+
+                                    sh "docker buildx build --push ${DOCKER_BUILDX_ARGS} --tag \"${stream}:${pythonVersion}-SLES${SLE_VERSION}-${env.VERSION}\" ."
+                                    publishCsmDockerImage(image: env.NAME, push: false, isStable: isStable, tag: "${pythonVersion}-SLES${SLE_VERSION}-${env.VERSION}")
+
+                                    sh "docker buildx build --push ${DOCKER_BUILDX_ARGS} --tag \"${stream}:${pythonVersion}-SLES${SLE_VERSION}-${env.VERSION}-${env.TIMESTAMP}\" ."
+                                    publishCsmDockerImage(image: env.NAME, push: false, isStable: isStable, tag: "${pythonVersion}-SLES${SLE_VERSION}-${env.VERSION}-${env.TIMESTAMP}")
                                 }
                             }
                         }
