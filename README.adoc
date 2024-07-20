@@ -12,6 +12,9 @@ See a list of available Python Images with `git tag`, but in general there are:
 [options="header",cols="m,1*^,m"]
 |===
 | Docker Tag | Base OS | GLIBC
+| 3.12
+| SLES-15-SP6
+| 2.38
 
 | 3.11
 | SLES-15-SP6
@@ -48,7 +51,7 @@ export SLES_REGISTRATION_CODE=<registration_code>
 
 make image
 
-docker run -it csm-docker-sle-python:3.11
+docker run -it csm-docker-sle-python:3.12
 ----
 
 === Remote Usage
@@ -57,10 +60,10 @@ To use the images built from Jenkins, use the full URL:
 
 [source,bash]
 ----
-docker run -it artifactory.algol60.net/csm-docker/stable/csm-docker-sle-python:3.11 bash
+docker run -it artifactory.algol60.net/csm-docker/stable/csm-docker-sle-python:3.12 bash
 
 # Git Hash
-docker run -it artifactory.algol60.net/csm-docker/stable/csm-docker-sle-python:3.11-<hash> bash
+docker run -it artifactory.algol60.net/csm-docker/stable/csm-docker-sle-python:3.12-<hash> bash
 ----
 
 == Python Version(s)
