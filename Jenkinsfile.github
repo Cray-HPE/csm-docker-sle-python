@@ -29,7 +29,7 @@
 def docker_registry = 'artifactory.algol60.net/csm-docker'
 
 // The Python version available from the SUSE repositories, with the period.
-def pythonVersion = '3.11'
+def pythonVersion = '3.12'
 
 // Define the distro that provides our repositories for the given Python version.
 def mainSleVersion = '15.6'
@@ -77,7 +77,7 @@ pipeline {
                 axes {
                     axis {
                         name 'SLE_VERSION'
-                        values '15.5', '15.6'
+                        values '15.6'
                     }
                 }
                 environment {
@@ -117,8 +117,8 @@ pipeline {
                                 if (isStable) {
                                     /*
                                     Publish these tags on stable:
-                                        - Major.Minor                   (e.g. 3.11-SLES15.5)
-                                        - Major.Minor                   (e.g. 3.11)
+                                        - Major.Minor                   (e.g. 3.12-SLES15.6)
+                                        - Major.Minor                   (e.g. 3.12)
                                     */
                                     def stream = "${docker_registry}/stable/${env.NAME}"
 
@@ -136,8 +136,8 @@ pipeline {
                                 } else {
                                     /*
                                     Publish these tags on unstable:
-                                        - Hash-Timestamp                (e.g. 3.11-SLES15.5-dhckj3-20221017133121)
-                                        - Hash                          (e.g. 3.11-SLES15.5-dhckj3)
+                                        - Hash-Timestamp                (e.g. 3.12-SLES15.6-dhckj3-20221017133121)
+                                        - Hash                          (e.g. 3.12-SLES15.6-dhckj3)
                                     */
                                     def stream = "${docker_registry}/unstable/${env.NAME}"
 
