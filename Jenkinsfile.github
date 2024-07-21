@@ -119,7 +119,8 @@ pipeline {
 
                         // Only publish the simple version images on the latest/newest base image.
                         if ("${SLE_VERSION}" == "${mainSleVersion}" && env.BRANCH_NAME == 'main') {
-                            publishCsmDockerImage(image: env.NAME, multiArch: env.MULTI_ARCH, isStable: isStable, tag: "latest")
+                            sh "docker buildx build ${BUILD_ARGS} ${DOCKER_ARGS} --platform ${DOCKER_PLATFORMS} --cache-from type=local,src=${BUILD_CACHE} --builder ${BUILD_CACHE} --push --tag \"latest\" ."
+                            publishCsmDockerImage(image: env.NAME, push: false, isStable: isStable, tag: "latest")
                         }
                     } else {
                         /*
