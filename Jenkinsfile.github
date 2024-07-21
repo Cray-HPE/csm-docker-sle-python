@@ -57,18 +57,19 @@ pipeline {
         timestamps()
     }
 
-    // Run every week on Sunday at 4 PM, long after the base image has rebuilt from that morning.
+    // Run every week on Sunday at 4 PM, long after the base image has rebuilt from that morning.   
     triggers { cron('H 16 * * 0') }
 
     environment {
-        DOCKER_ARGS = getDockerBuildArgs(name: getRepoName(), description: 'A build environment for Python.')
-        DOCKER_BUILDKIT = 1
-        MULTI_ARCH = 1
         NAME = getRepoName()
         PY_VERSION = "${pythonVersion}"
+        SLE_VERSION = "${mainSleVersion}"
         SLES_REGISTRATION_CODE = credentials('sles15-registration-code')
         TIMESTAMP = sh(returnStdout: true, script: "date '+%Y%m%d%H%M%S'").trim()
         VERSION = "${GIT_COMMIT[0..6]}"
+        DOCKER_ARGS = getDockerBuildArgs(name: getRepoName(), description: 'A build environment for Python.')
+        DOCKER_BUILDKIT = 1
+        DOCKER_PLATFORMS = "linux/amd64,linux/arm64"
     }
 
     stages {
@@ -81,8 +82,9 @@ pipeline {
                     }
                 }
                 environment {
-                    BUILD_CACHE = "SLES${SLE_VERSION}-${pythonVersion}-cache"
-                    BUILD_ARGS = "--build-arg SLE_VERSION=${SLE_VERSION} --build-arg PY_VERSION=${PY_VERSION} --secret id=SLES_REGISTRATION_CODE"
+                    BUILD_CACHE = "SLES${SLE_VERSION}-${PY_VERSION}-cache"
+                    BUILD_ARGS = "--build-arg 'SLE_VERSION=${SLE_VERSION}' --build-arg 'PY_VERSION=${PY_VERSION}' --secret id=SLES_REGISTRATION_CODE --builder ${BUILD_CACHE}"
+                    DOCKER_BUILDER = sh(returnStdout: true, script: "docker buildx create --platform ${DOCKER_PLATFORMS} --name ${BUILD_CACHE}").trim()
                 }
                 stages {
                     stage('Docker setup') {
@@ -103,53 +105,54 @@ pipeline {
                     stage('Build') {
                         steps {
                             script {
+                                sh "env"
                                 sh "make image"
                             }
                         }
                     }
-                    stage('Publish') {
-                        environment {
-                            DOCKER_BUILDX_ARGS = "${BUILD_ARGS} --platform linux/amd64,linux/arm64 --cache-from type=local,src=${BUILD_CACHE} --builder ${BUILD_CACHE}"
-                        }
-                        steps {
-                            script {
-                                // Only overwrite an image if this is a stable build.
-                                if (isStable) {
-                                    /*
-                                    Publish these tags on stable:
-                                        - Major.Minor                   (e.g. 3.11-SLES15.5)
-                                        - Major.Minor                   (e.g. 3.11)
-                                    */
-                                    def stream = "${docker_registry}/stable/${env.NAME}"
+                  stage('Publish') {
+                      steps {
+                          script {
+                              // Only overwrite an image if this is a stable build.
+                              if (isStable) {
+                                  /*
+                                  Publish these tags on stable:
+                                      - Major.Minor                   (e.g. 3.11-SLES15.6)
+                                      - Major.Minor                   (e.g. 3.11)
+                                  */
+                                  def stream = "${docker_registry}/stable/${env.NAME}"
 
-                                    sh "docker buildx build --push ${DOCKER_BUILDX_ARGS} --tag \"${stream}:${pythonVersion}-SLES${SLE_VERSION}\" ."
-                                    publishCsmDockerImage(image: env.NAME, push: false, isStable: isStable, tag: "${pythonVersion}-SLES${SLE_VERSION}")
+                                  sh "docker buildx build ${BUILD_ARGS} ${DOCKER_ARGS} --platform ${DOCKER_PLATFORMS} --cache-from type=local,src=${BUILD_CACHE} --builder ${BUILD_CACHE} --push --tag \"${stream}:${PY_VERSION}-SLES${SLE_VERSION}\" ."
+                                  publishCsmDockerImage(image: env.NAME, push: false, isStable: isStable, tag: "${PY_VERSION}-SLES${SLE_VERSION}")
 
-                                    // Only publish the simple version images on the latest/newest base image.
-                                    if ("${SLE_VERSION}" == "${mainSleVersion}" && env.BRANCH_NAME == 'main') {
-                                        sh "docker buildx build --push ${DOCKER_BUILDX_ARGS} --tag \"${stream}:${pythonVersion}\" ."
-                                        publishCsmDockerImage(image: env.NAME, push: false, isStable: isStable, tag: "${pythonVersion}")
+                                  // Only publish the major.minor tag on stable builds when SLE_VERSION == mainSleVersion.
+                                  if ("${SLE_VERSION}" == "${mainSleVersion}") {
+                                      sh "docker buildx build ${BUILD_ARGS} ${DOCKER_ARGS} --platform ${DOCKER_PLATFORMS} --cache-from type=local,src=${BUILD_CACHE} --builder ${BUILD_CACHE} --push --tag \"${stream}:${PY_VERSION}\" ."
+                                      publishCsmDockerImage(image: env.NAME, push: false, isStable: isStable, tag: "${PY_VERSION}")
+                                  }
 
-                                        sh "docker buildx build --push ${DOCKER_BUILDX_ARGS} --tag \"${stream}:latest\" ."
-                                        publishCsmDockerImage(image: env.NAME, push: false, isStable: isStable, tag: "latest")
-                                    }
-                                } else {
-                                    /*
-                                    Publish these tags on unstable:
-                                        - Hash-Timestamp                (e.g. 3.11-SLES15.5-dhckj3-20221017133121)
-                                        - Hash                          (e.g. 3.11-SLES15.5-dhckj3)
-                                    */
-                                    def stream = "${docker_registry}/unstable/${env.NAME}"
+                                  // Only publish the simple version images on the latest/newest base image.
+                                  if ("${SLE_VERSION}" == "${mainSleVersion}" && env.BRANCH_NAME == 'main') {
+                                      sh "docker buildx build ${BUILD_ARGS} ${DOCKER_ARGS} --platform ${DOCKER_PLATFORMS} --cache-from type=local,src=${BUILD_CACHE} --builder ${BUILD_CACHE} --push --tag \"${stream}:latest\" ."
+                                      publishCsmDockerImage(image: env.NAME, multiArch: env.MULTI_ARCH, isStable: isStable, tag: "latest")
+                                  }
+                              } else {
+                                  /*
+                                  Publish these tags on unstable:
+                                      - Hash                          (e.g. 3.11-SLES15.6-dhckj3)
+                                      - Hash-Timestamp                (e.g. 3.11-SLES15.6-dhckj3-20221017133121)
+                                  */
+                                  def stream = "${docker_registry}/unstable/${env.NAME}"
 
-                                    sh "docker buildx build --push ${DOCKER_BUILDX_ARGS} --tag \"${stream}:${pythonVersion}-SLES${SLE_VERSION}-${env.VERSION}\" ."
-                                    publishCsmDockerImage(image: env.NAME, push: false, isStable: isStable, tag: "${pythonVersion}-SLES${SLE_VERSION}-${env.VERSION}")
+                                  sh "docker buildx build ${BUILD_ARGS} ${DOCKER_ARGS} --platform ${DOCKER_PLATFORMS} --cache-from type=local,src=${BUILD_CACHE} --builder ${BUILD_CACHE} --push --tag \"${stream}:${PY_VERSION}-SLES${SLE_VERSION}-${VERSION}\" ."
+                                  publishCsmDockerImage(image: env.NAME, push: false, isStable: isStable, tag: "${PY_VERSION}-SLES${SLE_VERSION}-${VERSION}")
 
-                                    sh "docker buildx build --push ${DOCKER_BUILDX_ARGS} --tag \"${stream}:${pythonVersion}-SLES${SLE_VERSION}-${env.VERSION}-${env.TIMESTAMP}\" ."
-                                    publishCsmDockerImage(image: env.NAME, push: false, isStable: isStable, tag: "${pythonVersion}-SLES${SLE_VERSION}-${env.VERSION}-${env.TIMESTAMP}")
-                                }
-                            }
-                        }
-                    }
+                                  sh "docker buildx build ${BUILD_ARGS} ${DOCKER_ARGS} --platform ${DOCKER_PLATFORMS} --cache-from type=local,src=${BUILD_CACHE} --builder ${BUILD_CACHE} --push --tag \"${stream}:${PY_VERSION}-SLES${SLE_VERSION}-${VERSION}-${TIMESTAMP}\" ."
+                                  publishCsmDockerImage(image: env.NAME, push: false, isStable: isStable, tag: "${PY_VERSION}-SLES${SLE_VERSION}-${VERSION}-${TIMESTAMP}")
+                              }
+                          }
+                      }
+                  }
                 }
             }
         }
