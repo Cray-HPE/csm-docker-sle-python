@@ -27,8 +27,24 @@ ifeq ($(DOCKER_BUILDKIT),)
 export DOCKER_BUILDKIT ?= 1
 endif
 
+ifeq ($(DOCKER_LOCAL_PLATFORM),)
+export DOCKER_LOCAL_PLATFORM := $(shell docker version --format '{{.Server.Os}}/{{.Server.Arch}}')
+endif
+
+ifeq ($(DOCKER_PLATFORMS),)
+export DOCKER_PLATFORMS ?= 'linux/amd64,linux/arm64,$(DOCKER_LOCAL_PLATFORM)'
+endif
+
+ifeq ($(BUILD_CACHE),)
+export BUILD_CACHE ?= 'docker-build-cache'
+endif
+
+ifeq ($(DOCKER_BUILDER),)
+DOCKER_BUILDER := $(shell docker buildx create --platform $(DOCKER_LOCAL_PLATFORM) --name $(BUILD_CACHE))
+endif
+
 ifeq ($(SLE_VERSION),)
-export SLE_VERSION := $(shell awk -v replace="'" '/sleVersion/{gsub(replace,"", $$NF); print $$NF; exit}' Jenkinsfile.github)
+export SLE_VERSION := $(shell awk -v replace="'" '/mainSleVersion/{gsub(replace,"", $$NF); print $$NF; exit}' Jenkinsfile.github)
 endif
 
 ifeq ($(PY_VERSION),)
@@ -36,7 +52,7 @@ export PY_VERSION := $(shell awk -v replace="'" '/pythonVersion/{gsub(replace,""
 endif
 
 ifeq ($(BUILD_ARGS),)
-export BUILD_ARGS ?= --build-arg 'SLE_VERSION=$(SLE_VERSION)' --build-arg 'PY_VERSION=$(PY_VERSION)' --secret id=SLES_REGISTRATION_CODE
+export BUILD_ARGS ?= --build-arg 'SLE_VERSION=$(SLE_VERSION)'  --secret id=SLES_REGISTRATION_CODE --build-arg 'PY_VERSION=$(PY_VERSION)' --builder $(BUILD_CACHE)
 endif
 
 ifeq ($(TIMESTAMP),)
@@ -57,29 +73,25 @@ print:
 	@printf "%-20s: %s\n" 'SLE Version' $(SLE_VERSION)
 	@printf "%-20s: %s\n" Timestamp $(TIMESTAMP)
 	@printf "%-20s: %s\n" Version $(VERSION)
+	@printf "%-20s: %s\n" 'Docker Platforms' $(DOCKER_PLATFORMS)
 
 image: print
+    # For multi-platform builds. Leaves images in the local cache only
 	docker buildx build \
-        ${BUILD_ARGS} \
-        ${DOCKER_ARGS} \
-        --cache-to type=local,dest=docker-build-cache  \
-        --platform linux/amd64,linux/arm64 \
-        --builder $$(docker buildx create --platform linux/amd64,linux/arm64) \
-        --pull \
-        .
+		$(BUILD_ARGS) \
+		${DOCKER_ARGS} \
+		--platform $(DOCKER_PLATFORMS) \
+		--cache-to type=local,dest=$(BUILD_CACHE) \
+		--pull \
+		.
 
-	docker buildx create --use
-
+    # Tags and loads the image for the local build architecture
 	docker buildx build \
-        ${BUILD_ARGS} \
-        ${DOCKER_ARGS} \
-        --cache-from type=local,src=docker-build-cache \
-        --platform linux/amd64 \
-        --pull \
-        --load \
-        -t '${NAME}:latest' \
-        -t '${NAME}:${PY_VERSION}' \
-        -t '${NAME}:${PY_VERSION}-SLES${SLE_VERSION}' \
-        -t '${NAME}:${PY_VERSION}-SLES${SLE_VERSION}-${VERSION}' \
-        -t '${NAME}:${PY_VERSION}-SLES${SLE_VERSION}-${VERSION}-${TIMESTAMP}' \
-        .
+		$(BUILD_ARGS) \
+		${DOCKER_ARGS} \
+		--platform $(DOCKER_LOCAL_PLATFORM) \
+		--cache-from type=local,src=$(BUILD_CACHE) \
+		--pull \
+		--load \
+		-t '${NAME}:${PY_VERSION}-SLES${SLE_VERSION}-${VERSION}-${TIMESTAMP}' \
+		.
