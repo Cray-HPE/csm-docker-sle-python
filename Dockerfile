@@ -49,4 +49,5 @@ RUN python3 -m pip install --disable-pip-version-check --no-cache-dir -U \
     'virtualenv' \
     'wheel'
 
+ENV PYTHON_BIN=python${PY_VERSION}
 WORKDIR /build
