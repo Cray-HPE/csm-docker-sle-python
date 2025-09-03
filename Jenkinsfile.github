@@ -2,7 +2,7 @@
  *
  *  MIT License
  *
- *  (C) Copyright 2022-2024 Hewlett Packard Enterprise Development LP
+ *  (C) Copyright 2022-2025 Hewlett Packard Enterprise Development LP
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -29,10 +29,10 @@
 def docker_registry = 'artifactory.algol60.net/csm-docker'
 
 // The Python version available from the SUSE repositories, with the period.
-def pythonVersion = '3.12'
+def pythonVersion = '3.13'
 
 // Define the distro that provides our repositories for the given Python version.
-def mainSleVersion = '15.6'
+def mainSleVersion = '15.7'
 
 // Disable pr-merge builds; node-image pipeline doesn't use the PR images at all.
 if (env.BRANCH_NAME ==~ ~"^PR-\\d+") {
