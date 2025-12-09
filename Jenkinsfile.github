@@ -2,7 +2,7 @@
  *
  *  MIT License
  *
- *  (C) Copyright 2022-2024 Hewlett Packard Enterprise Development LP
+ *  (C) Copyright 2022-2025 Hewlett Packard Enterprise Development LP
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -58,8 +58,10 @@ pipeline {
         timestamps()
     }
 
-    // Run every week on Sunday at 4 PM, long after the base image has rebuilt from that morning.
-    triggers { cron('H 16 * * 0') }
+    // Run every week on Sunday at 4 PM on main and maint/* branches, long after the base image has rebuilt from that morning.
+    triggers {
+        cron(env.BRANCH_NAME ==~ ~"(main|maint\\/.*)" ? 'H 16 * * 0' : '')
+    }
 
     environment {
         NAME = getRepoName()
