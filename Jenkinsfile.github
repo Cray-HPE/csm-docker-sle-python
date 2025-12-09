@@ -58,8 +58,10 @@ pipeline {
         timestamps()
     }
 
-    // Run every week on Sunday at 4 PM, long after the base image has rebuilt from that morning.
-    triggers { cron('H 16 * * 0') }
+    // Run every week on Sunday at 4 PM on main and maint/* branches, long after the base image has rebuilt from that morning.
+    triggers {
+        cron(env.BRANCH_NAME ==~ ~"(main|maint\\/.*)" ? 'H 16 * * 0' : '')
+    }
 
     environment {
         NAME = getRepoName()
